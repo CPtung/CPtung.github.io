@@ -1,0 +1,44 @@
+openapi: "3.0.0"
+
+info:
+  title: ThingsPro APIs
+  version: "0.0.1"
+
+servers:
+  - url: https://{ip}:{port}/api/v1
+    variables:
+      ip:
+        default: "127.0.0.1"
+        description: HTTPs Server IP of Device
+      port:
+        default: "8443"
+        description: HTTPs Server Port of Device
+security:
+  - auth: []
+
+paths:
+  /auth:
+    x-internal: true
+    get:
+      summary: Get authentication status
+      tags:
+        - authentication [internal]
+      description:
+        This API returns wether authentication token in header is valid
+        by HTTP status code
+      responses:
+        200:
+          content:
+            application/json:
+              example:
+                data: ok
+          description: success
+        401:
+          description: unauthorized
+
+components:
+  securitySchemes:
+    auth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
