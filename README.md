@@ -18,3 +18,5 @@
 * [ThingsPro Agent](https://cptung.github.io/AIG301/thingspro-agent/#)
 
 ## AIG-502 Series
+### V0.15.0
+* [All](https://cptung.github.io/AIG502/static.html)
