@@ -1,0 +1,189 @@
+openapi: 3.0.0
+info:
+  title: ThingsPro Ethernet API
+  version: 0.0.1
+servers:
+  - url: https://{ip}:{port}/api/v1
+    variables:
+      ip:
+        default: 127.0.0.1
+        description: HTTPs Server IP
+      port:
+        default: '8443'
+        description: HTTPs Server Port
+security:
+  - auth: []
+paths:
+  /device/gps:
+    get:
+      description: Get gps configuration.
+      tags:
+        - gps
+      responses:
+        '200':
+          description: gps configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GpsInformation'
+              example:
+                data:
+                  mode: manual
+                  interface: ''
+                  location:
+                    lat: 23.5
+                    lng: 121.2
+                  capabilities:
+                    interface:
+                      - GPS1
+    patch:
+      description: Patch gps configuration.
+      tags:
+        - gps
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GpsSetMode'
+            examples:
+              set manual mode with lat/lng value:
+                value:
+                  mode: manual
+                  location:
+                    lat: 23.5
+                    lng: 121.2
+              set auto mode with interface:
+                value:
+                  mode: auto
+                  interface: GPS1
+      responses:
+        '200':
+          description: All gps configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GpsInformation'
+              examples:
+                manual:
+                  value:
+                    data:
+                      mode: manual
+                      interface: ''
+                      location:
+                        lat: 23.5
+                        lng: 121.2
+                      capabilities:
+                        interface:
+                          - GPS1
+                auto:
+                  value:
+                    data:
+                      mode: auto
+                      interface: GPS1
+                      location:
+                        lat: 0
+                        lng: 0
+                      capabilities:
+                        interface:
+                          - GPS1
+                disable:
+                  value:
+                    data:
+                      mode: auto
+                      interface: GPS1
+                      location:
+                        lat: 0
+                        lng: 0
+                      capabilities:
+                        interface:
+                          - GPS1
+                interval100:
+                  value:
+                    data:
+                      mode: manual
+                      interface: ''
+                      location:
+                        lat: 23.5
+                        lng: 121.2
+                      capabilities:
+                        interface:
+                          - GPS1
+components:
+  schemas:
+    GpsInformation:
+      title: GPS interface configuration
+      properties:
+        data:
+          $ref: '#/components/schemas/GpsItem'
+    GpsItem:
+      title: GPS Information
+      properties:
+        interface:
+          type: string
+          description: Device path.
+          example: GPS1
+        mode:
+          type: string
+          description: gps mode.
+          enum:
+            - manual
+            - auto
+          example: null
+        location:
+          $ref: '#/components/schemas/GpsLocation'
+        capabilities:
+          $ref: '#/components/schemas/GPSCapability'
+    GpsSetMode:
+      title: Set GPS manual mode.
+      required:
+        - mode
+        - interface
+      properties:
+        mode:
+          type: string
+          description: gps mode.
+          enum:
+            - manual
+            - auto
+          example: manual
+        interface:
+          type: string
+          description: GPS interface setting from capability. The field is required for `auto` mode.
+          example: GPS1
+        location:
+          $ref: '#/components/schemas/GpsLocation'
+    GpsLocation:
+      type: object
+      description: Location information, with `latitude` and `longitude` data.
+      required:
+        - lat
+        - lng
+      properties:
+        lat:
+          type: number
+          format: float
+          minimum: -90
+          maximum: 90
+          description: latitude. The field is required for `manual` mode.
+          default: 0
+          example: 23.5
+        lng:
+          type: number
+          format: float
+          minimum: -180
+          maximum: 180
+          description: longitude. The field is required for `manual` mode.
+          default: 0
+          example: 121.2
+    GPSCapability:
+      title: Gps capability
+      properties:
+        interface:
+          type: array
+          description: list supported gps interfaces.
+          items:
+            type: string
+          example:
+            - GPS1
+          readOnly: true

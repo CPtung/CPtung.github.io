@@ -1,0 +1,259 @@
+openapi: 3.0.0
+info:
+  title: ThingsPro Services Management APIs
+  version: 0.0.1
+servers:
+  - url: https://{ip}:{port}/api/v1
+    variables:
+      ip:
+        default: 127.0.0.1
+        description: HTTPs Server IP of Device
+      port:
+        default: '8443'
+        description: HTTPs Server Port of Device
+security:
+  - auth: []
+paths:
+  /services:
+    get:
+      summary: list all service accounts
+      tags:
+        - services
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              examples:
+                app list:
+                  $ref: '#/components/examples/testAppList'
+              schema:
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/service'
+    post:
+      summary: create new service account
+      tags:
+        - services
+      requestBody:
+        required: true
+        content:
+          application/json:
+            examples:
+              create test app:
+                $ref: '#/components/examples/testAppRequest'
+            schema:
+              $ref: '#/components/schemas/service'
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              examples:
+                create test app:
+                  $ref: '#/components/examples/testAppResponse'
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/service'
+  /services/{source}:
+    parameters:
+      - description: the source category of service accounts
+        in: path
+        name: source
+        required: true
+        schema:
+          type: string
+    get:
+      summary: list service accounts with source
+      tags:
+        - services
+      parameters:
+        - name: source
+          in: query
+          description: the source name of this service.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              examples:
+                service list:
+                  $ref: '#/components/examples/testAppList'
+              schema:
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/service'
+  /services/{source}/{name}:
+    parameters:
+      - description: the source category of service accounts
+        in: path
+        name: source
+        required: true
+        schema:
+          type: string
+      - description: name of service
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+    get:
+      summary: get service account
+      tags:
+        - services
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              examples:
+                get test app:
+                  $ref: '#/components/examples/testAppResponse'
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/service'
+    put:
+      summary: update service account
+      tags:
+        - services
+      requestBody:
+        required: true
+        content:
+          application/json:
+            examples:
+              update test app:
+                $ref: '#/components/examples/testAppRequest'
+            schema:
+              $ref: '#/components/schemas/putService'
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              examples:
+                update test app:
+                  $ref: '#/components/examples/testAppResponse'
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/service'
+    delete:
+      summary: delete permission of service
+      tags:
+        - services
+      responses:
+        '204':
+          description: success
+components:
+  securitySchemes:
+    auth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    service:
+      required:
+        - name
+        - source
+      properties:
+        name:
+          type: string
+          description: The name of the service.
+        displayName:
+          type: string
+          description: The display name of the service.
+        source:
+          type: string
+          description: The source that create this service.
+        addon:
+          type: array
+          description: The add-on permissions of the service.
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: The ID of the add-on permission.
+              name:
+                type: string
+                description: The description of the add-on permission.
+        required:
+          type: array
+          description: The required permissions of the service
+          items:
+            type: string
+    putService:
+      properties:
+        name:
+          type: string
+          description: The name of the service.
+          readOnly: true
+        displayName:
+          type: string
+          description: The display name of the service.
+        source:
+          type: string
+          description: The source that create this service.
+          readOnly: true
+        addon:
+          type: array
+          description: The add-on permissions of the service.
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: The ID of the add-on permission.
+              name:
+                type: string
+                description: The description of the add-on permission.
+        required:
+          type: array
+          description: The required permissions of the service
+          items:
+            type: string
+  examples:
+    testAppRequest:
+      value:
+        Name: testapp
+        DisplayName: My Test APP
+        Source: api
+        Addon:
+          - id: APP_TEST_RW
+            name: My test app permission
+        Required:
+          - SYS_MANAGEMENT_RW
+          - SRV_AIE_RW
+    testAppResponse:
+      value:
+        data:
+          Name: testapp
+          DisplayName: My Test APP
+          Source: api
+          Addon:
+            - id: APP_TEST_RW
+              name: My test app permission
+          Required:
+            - SYS_MANAGEMENT_RW
+            - SRV_AIE_RW
+    testAppList:
+      value:
+        data:
+          - Name: testapp
+            DisplayName: My Test APP
+            Source: api
+            Addon:
+              - id: APP_TEST_RW
+                name: My test app permission
+            Required:
+              - SYS_MANAGEMENT_RW
+              - SRV_AIE_RW

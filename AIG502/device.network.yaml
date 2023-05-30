@@ -1,0 +1,122 @@
+openapi: 3.0.0
+info:
+  title: ThingsPro Device API
+  version: 0.0.1
+servers:
+  - url: https://{ip}:{port}/api/v1
+    variables:
+      ip:
+        default: 127.0.0.1
+        description: HTTPs Server IP
+      port:
+        default: '8443'
+        description: HTTPs Server Port
+security:
+  - auth: []
+paths:
+  /device/network/wan/check:
+    post:
+      description: Do internt check alive
+      tags:
+        - network
+      responses:
+        '200':
+          description: Status of internet check alive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternetCheckAlive_PostRsp'
+              example:
+                data:
+                  status: ConnectedToInternet
+    get:
+      description: Get configuration of internet check alive
+      tags:
+        - network
+      responses:
+        '200':
+          description: Configuration of internet check alive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternetCheckAliveConfig'
+              example:
+                data:
+                  enable: true
+                  target: www.google.com
+                  interval: 60
+                  timeout: 5
+                  retry: 3
+    put:
+      description: Update configuration of internet check alive
+      tags:
+        - network
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InternetCheckAliveConfig'
+            example:
+              enable: true
+              target: www.moxa.com
+              interval: 120
+              timeout: 10
+              retry: 5
+      responses:
+        '200':
+          description: Configuration of internet check alive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternetCheckAliveConfig'
+              example:
+                data:
+                  enable: true
+                  target: www.moxa.com
+                  interval: 120
+                  timeout: 10
+                  retry: 5
+components:
+  schemas:
+    InternetCheckAlive_PostRsp:
+      title: Response of internet check alive
+      properties:
+        status:
+          type: string
+          description: status of internet check alive
+          enum:
+            - NotConnected
+            - NoInternetAccess
+            - ConnectedToInternet
+    InternetCheckAliveConfig:
+      title: Response configuration of internet check alive
+      properties:
+        enable:
+          type: boolean
+          description: enable/disable internet check alive service
+          default: false
+        target:
+          type: string
+          description: target for internet check alive
+          minLength: 1
+          maxLength: 255
+          default: google.com
+        interval:
+          type: integer
+          description: interval in seconds for internet check alive
+          minimum: 10
+          maximum: 86400
+          default: 60
+        timeout:
+          type: integer
+          description: each check timeout in seconds for internet check alive
+          minimum: 1
+          maximum: 60
+          default: 5
+        retry:
+          type: integer
+          description: retry times for internet check alive
+          minimum: 1
+          maximum: 10
+          default: 3

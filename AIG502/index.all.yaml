@@ -1,0 +1,5928 @@
+openapi: 3.0.0
+info:
+  title: AIG-502 APIs
+  version: 0.15.0+2163
+servers:
+- url: https://{ip}:{port}/api/v1
+  variables:
+    ip:
+      default: 127.0.0.1
+      description: HTTPs Server IP of Device
+    port:
+      default: "8443"
+      description: HTTPs Server Port of Device
+paths:
+  /audits:
+    get:
+      parameters:
+      - description: Limit the number of result (default:100).
+        in: query
+        name: limit
+        schema:
+          type: integer
+      - description: Log starting from the offset (default:0).
+        in: query
+        name: offset
+        schema:
+          type: integer
+      - description: Order by key (default:time). Use id if order by absolute time
+          required, cannot provide the precise time but the absolute order which won't
+          affect by time change.
+        in: query
+        name: order
+        schema:
+          enum:
+          - time
+          - id
+          - category
+          - name
+          type: string
+      - description: sorting (default:desc).
+        in: query
+        name: sort
+        schema:
+          enum:
+          - asc
+          - desc
+          type: string
+      - description: Filter out logs by category with keywords seperated by comma(,)
+        in: query
+        name: categories
+        schema:
+          type: string
+      - description: Filter out logs by event name with keywords seperated by comma(,)
+        in: query
+        name: names
+        schema:
+          type: string
+      - description: Filter out logs by severity with keywords seperated by comma(,)
+        in: query
+        name: severities
+        schema:
+          type: string
+      - description: Filter out logs by source with keywords seperated by comma(,)
+        in: query
+        name: sources
+        schema:
+          type: string
+      - description: Filter out logs that partially or fully match the category, with
+          keywords separated by commas (,)
+        in: query
+        name: messages
+        schema:
+          type: string
+      - description: Download audit log as csv file (Value is always true if having
+          this field).
+        in: query
+        name: download
+        schema:
+          type: boolean
+      - description: Enable server-sent event to monitor exposed audit log. (Value
+          is always true if having this field).
+        in: query
+        name: monitor
+        schema:
+          type: boolean
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                count: 2
+                data:
+                - category: Maintenance
+                  createdAt: "2020-02-25T00:08:54.97510268+08:00"
+                  id: 20340
+                  message: Software package update success.
+                  name: softwarePackageUpdate
+                  severity: notice
+                  source: System
+                - category: Maintenance
+                  createdAt: "2020-02-25T00:08:54.92855576+08:00"
+                  id: 20339
+                  message: Reset to configuration default.
+                  name: resetToConfigurationDefault
+                  severity: notice
+                  source: System
+                limit: 2
+                offset: 0
+                total: 14154
+              schema:
+                items:
+                  $ref: '#/components/schemas/AuditLog'
+                type: array
+            text/csv:
+              schema:
+                format: binary
+                type: string
+          description: success
+      security:
+      - auth: []
+      summary: Get audits
+      tags:
+      - audit log
+  /audits/configuration:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  desiredDiskCacheSizeMB: 100
+                  enableTimeToLiveSec: true
+                  reachThresholdPolicy: rotate
+                  timeToLiveSec: 86400
+              schema:
+                items:
+                  $ref: '#/components/schemas/AuditSetting'
+                type: object
+          description: success
+      security:
+      - auth: []
+      summary: Get Audit Log setting configuration
+      tags:
+      - audit log
+    put:
+      requestBody:
+        content:
+          application/json:
+            example:
+              desiredDiskCacheSizeMB: 2
+              enableTimeToLiveSec: true
+              reachThresholdPolicy: rotate
+              timeToLiveSec: 86400
+            schema:
+              items:
+                $ref: '#/components/schemas/AuditSetting'
+              type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  desiredDiskCacheSizeMB: 2
+                  enableTimeToLiveSec: true
+                  reachThresholdPolicy: rotate
+                  timeToLiveSec: 86400
+              schema:
+                items:
+                  $ref: '#/components/schemas/AuditSetting'
+                type: object
+          description: success
+      security:
+      - auth: []
+      summary: Set audit configuration
+      tags:
+      - audit log
+  /auth:
+    get:
+      description: This API returns wether authentication token in header is valid
+        by HTTP status code
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data: ok
+              schema:
+                properties:
+                  data:
+                    type: string
+          description: success
+        "401":
+          description: unauthorized
+      security:
+      - auth: []
+      summary: Get authentication status
+      tags:
+      - authentication
+    post:
+      requestBody:
+        content:
+          application/json:
+            example:
+              acceptEULA: true
+              name: admin
+              password: moxa1234
+            schema:
+              properties:
+                acceptEULA:
+                  type: boolean
+                name:
+                  type: string
+                password:
+                  type: string
+              required:
+              - name
+              - password
+              type: object
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6InRlc3QiLCJpYXQiOjE1NjM0MjA5MTQsImV4cCI6NDcxNzAyMDkxNH0.7oGA1VHBingnzeG7hHgWEiZ4JmoserFguyeb7_GUK6E
+                  user:
+                    email: null
+                    expiredAfter: "2050-01-31T16:00:00.000Z"
+                    id: 1
+                    isActive: true
+                    lastReadLogID: 0
+                    loginAt: "0001-01-01T00:00:00Z"
+                    name: admin
+                    permissions:
+                    - SYS_MAINTENANCE_RW
+                    - SYS_SECURITY_RW
+                    remindPasswordExpiredAfter: null
+                    roles:
+                    - id: 1
+                      name: Administrator
+              schema:
+                properties:
+                  data:
+                    properties:
+                      token:
+                        type: string
+                      user:
+                        $ref: '#/components/schemas/Account'
+          description: success
+        "401":
+          content:
+            application/json:
+              examples:
+                unauth:
+                  summary: unauthorized
+                  value:
+                    error:
+                      code: 401
+                      message: The account or password you entered is not correct.
+              schema:
+                properties:
+                  error:
+                    properties:
+                      code:
+                        description: HTTP status code.
+                        type: integer
+                      message:
+                        description: Error message.
+                        type: string
+                    type: object
+                type: object
+          description: unauthorized
+      security: []
+      summary: Sign in
+      tags:
+      - authentication
+  /auth-lock:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  enable: true
+                  failTimes: 10
+                  failWindow: 60
+                  lockWindow: 600
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/auth-lock-config'
+          description: success
+      security:
+      - auth: []
+      summary: Get auth lock configuration
+      tags:
+      - auth lock
+    put:
+      requestBody:
+        content:
+          application/json:
+            example:
+              enable: true
+              failTimes: 10
+              failWindow: 60
+              lockWindow: 600
+            schema:
+              $ref: '#/components/schemas/auth-lock-config'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  enable: true
+                  failTimes: 10
+                  failWindow: 60
+                  lockWindow: 600
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/auth-lock-config'
+          description: success
+      security:
+      - auth: []
+      summary: update auth lock configuration
+      tags:
+      - auth lock
+  /auth-lock/users:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                - 1
+                - 2
+                - 3
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/auth-lock-list'
+          description: success
+      security:
+      - auth: []
+      summary: Get locked account id
+      tags:
+      - auth lock
+  /azure-iotedge:
+    get:
+      description: Get azure iotedge configuration.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AzureIoTEdgeConfiguration'
+          description: Azure iotedge configuration.
+      security:
+      - auth: []
+      tags:
+      - azure iotedge
+    patch:
+      description: Update azure iotedge configuration.
+      requestBody:
+        content:
+          application/json:
+            examples:
+              downstreamCerts-default:
+                value:
+                  downstreamCerts:
+                    mode: default
+              downstreamCerts-moxa:
+                value:
+                  downstreamCerts:
+                    mode: moxa
+              enable-defender:
+                value:
+                  provisioning:
+                    defenderEnable: true
+                    enable: true
+              enable-service:
+                value:
+                  provisioning:
+                    enable: true
+              provisioning-dps-symmetricKey:
+                value:
+                  provisioning:
+                    globalEndpoint: https://global.azure-devices-provisioning.net
+                    method: symmetricKey
+                    registrationId: '[registration ID]'
+                    scopeId: '[DEVICE SCOPE ID]'
+                    source: dps
+                    symmetricKey: '[symmetric Key]'
+              provisioning-dps-tpm:
+                value:
+                  provisioning:
+                    globalEndpoint: https://global.azure-devices-provisioning.net
+                    method: tpm
+                    registrationId: '[registration ID]'
+                    scopeId: '[DEVICE SCOPE ID]'
+                    source: dps
+              provisioning-manual:
+                value:
+                  provisioning:
+                    connectionString: '[YOUR CONNECTION STRING]'
+                    source: manual
+            schema:
+              $ref: '#/components/schemas/AzureIoTEdgeConfiguration'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AzureIoTEdgeConfiguration'
+          description: azure iotedge configuration
+      security:
+      - auth: []
+      tags:
+      - azure iotedge
+  /azure-iotedge/certificates:
+    get:
+      description: Export user self generate downstream certificates.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    example: |2
+
+                      -----BEGIN CERTIFICATE-----
+                      x509_content
+                      -----END CERTIFICATE-----
+                      -----BEGIN CERTIFICATE-----
+                      x509_content
+                      -----END CERTIFICATE-----
+                      -----BEGIN CERTIFICATE-----
+                      x509 content
+                      -----END CERTIFICATE-----
+                    type: string
+          description: downstream certificate
+      security:
+      - auth: []
+      tags:
+      - azure iotedge
+    post:
+      description: Import user certificates and update azure iotedge configuration.
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              properties:
+                caCertFile:
+                  description: device ca certificate
+                  format: binary
+                  type: string
+                caPkFile:
+                  description: device ca private key
+                  format: binary
+                  type: string
+                trustedCaFile:
+                  description: a file containing all the trusted CA
+                  format: binary
+                  type: string
+              type: object
+        description: The uploaded certificates and configuration.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AzureIoTEdgeConfiguration'
+          description: azure iotedge configuration
+      security:
+      - auth: []
+      tags:
+      - azure iotedge
+  /azure-iotedge/defender:
+    get:
+      description: get defender runtime information.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    properties:
+                      since:
+                        example: Wed 2023-05-03 16:47:46 CST
+                        type: string
+                      status:
+                        example: active(running)
+                        type: string
+                      version:
+                        example: 4.6.2
+                        type: string
+          description: defender runtime information
+      security:
+      - auth: []
+      tags:
+      - azure iotedge
+  /azure-iotedge/defender/reload:
+    put:
+      description: reload defender (need enable defender).
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    properties:
+                      since:
+                        example: Wed 2023-05-03 16:47:46 CST
+                        type: string
+                      status:
+                        example: active(running)
+                        type: string
+                      version:
+                        example: 4.6.2
+                        type: string
+          description: message policy setting
+      security:
+      - auth: []
+      tags:
+      - azure iotedge
+  /azure-iotedge/messages:
+    get:
+      description: get message groups setting.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/MessagePolicy'
+                type: array
+          description: message groups setting
+      security:
+      - auth: []
+      tags:
+      - azure iotedge
+    post:
+      description: create a message group.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessagePolicy'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/MessagePolicy'
+                type: array
+          description: message group setting
+      security:
+      - auth: []
+      tags:
+      - azure iotedge
+  /azure-iotedge/messages/{id}:
+    delete:
+      description: delete message group setting.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/MessagePolicy'
+                type: array
+          description: message groups setting
+      security:
+      - auth: []
+      tags:
+      - azure iotedge
+    get:
+      description: get message group setting.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/MessagePolicy'
+          description: message policy setting
+      security:
+      - auth: []
+      tags:
+      - azure iotedge
+    parameters:
+    - description: message group id.
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+    put:
+      description: update message group setting.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessagePolicy'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/MessagePolicy'
+          description: message group setting
+      security:
+      - auth: []
+      tags:
+      - azure iotedge
+  /azure-iotedge/modules/{name}/restart:
+    put:
+      description: Restart azure module.
+      parameters:
+      - description: control action.
+        in: path
+        name: name
+        required: true
+        schema:
+          enum:
+          - restart
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                example:
+                  data: edgeAgent enable task is accepted
+                properties:
+                  data:
+                    type: string
+          description: Restart azure iotedge modules success
+        "400":
+          content:
+            application/json:
+              schema:
+                example:
+                  error: stop module is not allowed
+                properties:
+                  error:
+                    type: string
+          description: Restart azure iotedge service/modules failed
+      security:
+      - auth: []
+      tags:
+      - azure iotedge
+  /azure-iotedge/modules/auth:
+    post:
+      description: SOURCE=AzureIoTEdge
+      requestBody:
+        content:
+          application/json:
+            example:
+              name: thingspro-agent
+            schema:
+              properties:
+                name:
+                  type: string
+              required:
+              - name
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6InRlc3QiLCJpYXQiOjE1NjM0MjA5MTQsImV4cCI6NDcxNzAyMDkxNH0.7oGA1VHBingnzeG7hHgWEiZ4JmoserFguyeb7_GUK6E
+              schema:
+                properties:
+                  data:
+                    properties:
+                      token:
+                        type: string
+          description: success
+      security:
+      - auth: []
+      summary: auth service and get token
+      tags:
+      - azure iotedge
+  /azure-iotedge/reset:
+    put:
+      description: Reset AIE APP(include iotedge runtime) cache and configuration.
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                example:
+                  data:
+                    iotedge:
+                      status: resetting
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AzureIoTEdgeConfiguration'
+          description: restart azure iotedge service success
+        "400":
+          content:
+            application/json:
+              schema:
+                example:
+                  error: reset iotedge failed
+                properties:
+                  error:
+                    type: string
+          description: reset failed
+      security:
+      - auth: []
+      tags:
+      - azure iotedge
+  /azure-iotedge/restart:
+    put:
+      description: Control azure iotedge service.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AzureIoTEdgeConfiguration'
+          description: restart azure iotedge service success
+        "400":
+          content:
+            application/json:
+              schema:
+                example:
+                  error: restart iotedge failed
+                properties:
+                  error:
+                    type: string
+          description: restart azure iotedge service failed
+      security:
+      - auth: []
+      tags:
+      - azure iotedge
+  /azure-iotedge/twin/properties:
+    get:
+      description: get twin properties setting.
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DeviceProperties'
+          description: twin properties setting.
+      security:
+      - auth: []
+      tags:
+      - azure iotedge
+    put:
+      description: update twin properties setting.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceProperties'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DeviceProperties'
+          description: twin properties setting.
+      security:
+      - auth: []
+      tags:
+      - azure iotedge
+  /device/cellulars:
+    get:
+      description: Get cellular interfaces configuration.
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                AllCellularInformation:
+                  $ref: '#/components/examples/GetCellulars'
+                AllCellularInformationNotAvailable:
+                  $ref: '#/components/examples/NoCellularModuleAvailable'
+              schema:
+                $ref: '#/components/schemas/Cellulars'
+          description: All cellular interfaces
+      security:
+      - auth: []
+      tags:
+      - cellulars
+    put:
+      description: Update cellular interfaces configuration.
+      requestBody:
+        content:
+          application/json:
+            examples:
+              PutCellulars:
+                $ref: '#/components/examples/PutCellularsRequest'
+            schema:
+              items:
+                $ref: '#/components/schemas/ConfigurationRequest'
+              type: array
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                CellularConfiguration:
+                  $ref: '#/components/examples/PutCellularsResponse'
+              schema:
+                $ref: '#/components/schemas/ConfigurationResponse'
+          description: Network cellular configuration
+      security:
+      - auth: []
+      tags:
+      - cellulars
+  /device/cellulars/{id}:
+    get:
+      description: Get cellular interface configuration.
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                CellularInformation:
+                  $ref: '#/components/examples/GetCellular'
+              schema:
+                $ref: '#/components/schemas/Cellular'
+          description: Cellular interface configuration
+      security:
+      - auth: []
+      tags:
+      - cellulars
+    parameters:
+    - description: Cellular interface id.
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+    put:
+      description: Update cellular configuration.
+      requestBody:
+        content:
+          application/json:
+            examples:
+              PutCellular:
+                $ref: '#/components/examples/PutCellularRequest'
+            schema:
+              $ref: '#/components/schemas/ConfigurationRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                CellularConfiguration:
+                  $ref: '#/components/examples/PutCellularResponse'
+              schema:
+                $ref: '#/components/schemas/ConfigurationResponse'
+          description: Cellular interface configuration
+      security:
+      - auth: []
+      tags:
+      - cellulars
+  /device/ethernets:
+    get:
+      description: Get ethernet interfaces configuration.
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                count: 1
+                data:
+                - displayName: LAN1
+                  dns:
+                  - 8.8.8.8
+                  - 4.4.4.4
+                  enable: true
+                  enableDhcp: false
+                  gateway: 192.168.3.254
+                  id: 1
+                  ip: 192.168.3.100
+                  linkSpeed: 1000
+                  mac: 00:90:e8:12:34:56
+                  name: eth0
+                  netmask: 255.255.255.0
+                  status: connected
+                  wan: true
+              schema:
+                $ref: '#/components/schemas/AllEthernetInformation'
+          description: All ethernet interfaces configuration.
+      security:
+      - auth: []
+      tags:
+      - ethernets
+    patch:
+      description: Update ethernet interface configuration.
+      requestBody:
+        content:
+          application/json:
+            examples:
+              dhcp:
+                value:
+                - enable: true
+                  enableDhcp: true
+                  id: 1
+                  wan: true
+              static:
+                value:
+                - dns:
+                  - 1.1.1.1
+                  - 2.2.2.2
+                  enable: true
+                  enableDhcp: false
+                  gateway: 192.168.4.254
+                  id: 1
+                  ip: 192.168.4.100
+                  netmask: 255.255.255.0
+                  wan: true
+            schema:
+              oneOf:
+              - $ref: '#/components/schemas/AllEthernetDhcp'
+              - $ref: '#/components/schemas/AllEthernetStaticIP'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                dhcp:
+                  value:
+                    data:
+                      displayName: LAN1
+                      dns:
+                      - 8.8.8.8
+                      - 4.4.4.4
+                      enable: true
+                      enableDhcp: true
+                      gateway: 192.168.3.254
+                      id: 1
+                      ip: 192.168.3.100
+                      mac: 00:90:e8:12:34:56
+                      name: eth0
+                      netmask: 255.255.255.0
+                      status: connected
+                      wan: true
+                static:
+                  value:
+                    data:
+                      displayName: LAN1
+                      dns:
+                      - 1.1.1.1
+                      - 2.2.2.2
+                      enable: true
+                      enableDhcp: false
+                      gateway: 192.168.4.254
+                      id: 1
+                      ip: 192.168.4.100
+                      mac: 00:90:e8:12:34:56
+                      name: eth0
+                      netmask: 255.255.255.0
+                      status: connected
+                      wan: true
+              schema:
+                $ref: '#/components/schemas/EthernetInformation'
+          description: Ethernet interface configuration.
+      security:
+      - auth: []
+      tags:
+      - ethernets
+  /device/ethernets/{id}:
+    get:
+      description: Get ethernet interface configuration.
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  displayName: LAN1
+                  dns:
+                  - 8.8.8.8
+                  - 4.4.4.4
+                  enable: true
+                  enableDhcp: false
+                  gateway: 192.168.3.254
+                  id: 1
+                  ip: 192.168.3.100
+                  linkSpeed: 1000
+                  mac: 00:90:e8:12:34:56
+                  name: eth0
+                  netmask: 255.255.255.0
+                  status: connected
+                  wan: true
+              schema:
+                $ref: '#/components/schemas/EthernetInformation'
+          description: Ethernet interface configuration
+      security:
+      - auth: []
+      tags:
+      - ethernets
+    parameters:
+    - description: Ethernet interface id.
+      example: 1
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+    patch:
+      description: Update ethernet interface configuration.
+      requestBody:
+        content:
+          application/json:
+            examples:
+              dhcp:
+                value:
+                  enable: true
+                  enableDhcp: true
+                  wan: true
+              static:
+                value:
+                  dns:
+                  - 1.1.1.1
+                  - 2.2.2.2
+                  enable: true
+                  enableDhcp: false
+                  gateway: 192.168.4.254
+                  ip: 192.168.4.100
+                  netmask: 255.255.255.0
+                  wan: true
+            schema:
+              oneOf:
+              - $ref: '#/components/schemas/EthernetDhcp'
+              - $ref: '#/components/schemas/EthernetStaticIP'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                dhcp:
+                  value:
+                    data:
+                      displayName: LAN1
+                      dns:
+                      - 8.8.8.8
+                      - 4.4.4.4
+                      enable: true
+                      enableDhcp: true
+                      gateway: 192.168.3.254
+                      id: 1
+                      ip: 192.168.3.100
+                      linkSpeed: 1000
+                      mac: 00:90:e8:12:34:56
+                      name: eth0
+                      netmask: 255.255.255.0
+                      status: connected
+                      wan: true
+                static:
+                  value:
+                    data:
+                      displayName: LAN1
+                      dns:
+                      - 1.1.1.1
+                      - 2.2.2.2
+                      enable: true
+                      enableDhcp: false
+                      gateway: 192.168.4.254
+                      id: 1
+                      ip: 192.168.4.100
+                      linkSpeed: 1000
+                      mac: 00:90:e8:12:34:56
+                      name: eth0
+                      netmask: 255.255.255.0
+                      status: connected
+                      wan: true
+              schema:
+                $ref: '#/components/schemas/EthernetInformation'
+          description: Ethernet interface configuration.
+      security:
+      - auth: []
+      tags:
+      - ethernets
+  /device/firewall/inbounds:
+    get:
+      description: Get firewall host inbound status overview.
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                value:
+                  count: 1
+                  data:
+                  - description: Admin Web HTTPS port
+                    gatewayPort: "8443"
+                    id: 80
+                    name: Port_8443
+                    protocol: tcp
+                    sourceIp: 10.128.10.0/22
+                    sourcePort: ""
+              schema:
+                items:
+                  $ref: '#/components/schemas/inbound-host-zone'
+                type: array
+          description: firewall inbound configuration.
+      security:
+      - auth: []
+      tags:
+      - host
+  /device/firewall/inbounds/{id}:
+    parameters:
+    - description: rule ID
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+  /device/firewall/it-zone/inbounds:
+    get:
+      description: Get firewall it-zone inbound status overview.
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                value:
+                  count: 1
+                  data:
+                  - description: Allow AIE Module test-1 Connection
+                    destinationIp: 172.31.4.100
+                    destinationPort: "8080"
+                    gatewayPort: "8080"
+                    id: 80
+                    name: Port_8080
+                    protocol: tcp
+                    sourceIp: ""
+                    sourcePort: ""
+              schema:
+                items:
+                  $ref: '#/components/schemas/inbound-it-zone'
+                type: array
+          description: firewall inbound configuration.
+      security:
+      - auth: []
+      tags:
+      - it-zone inbound
+  /device/firewall/it-zone/inbounds/{id}:
+    parameters:
+    - description: rule ID
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+  /device/firewall/it-zone/outbounds:
+    get:
+      description: Get firewall it-zone outbound status overview.
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                value:
+                  count: 1
+                  data:
+                  - description: Allow AIE Module test-1 Connection
+                    destinationIp: 172.31.4.100
+                    destinationPort: "8080"
+                    id: 80
+                    name: Port_8080
+                    protocol: tcp
+                    sourceIp: ""
+                    sourcePort: ""
+              schema:
+                items:
+                  $ref: '#/components/schemas/outbound-it-zone'
+                type: array
+          description: firewall outbound configuration.
+      security:
+      - auth: []
+      tags:
+      - it-zone outbound
+  /device/firewall/it-zone/outbounds/{id}:
+    parameters:
+    - description: rule ID
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+  /device/general:
+    get:
+      description: Get system general configuration.
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  biosVersion: 1.0.0S01
+                  cpu: ARMv7 Processor rev 2 (v7l)
+                  description: This is My Thingspro Edge.
+                  disk:
+                  - device: /dev/root
+                    free: 1905097752
+                    mount: /
+                    name: System
+                    percent: 35.5
+                    tags:
+                      free: systemDiskFree
+                      percent: systemDiskPercent
+                      used: systemDiskUsed
+                    total: 3206059008
+                    used: 1138657820
+                  firmwareVersion: 1.0.0
+                  hostName: Moxa
+                  lastBootTime: "2019-06-27T10:10:16+08:00"
+                  memorySize: 1056120832
+                  modelName: UC-8112A-ME-T-LX-EU
+                  serialNumber: IMOXA1234567
+                  softwareVersion: 1.0.0
+              schema:
+                $ref: '#/components/schemas/GeneralInformation'
+          description: System general configuration.
+      security:
+      - auth: []
+      tags:
+      - general
+    patch:
+      description: Update system general configuration.
+      requestBody:
+        content:
+          application/json:
+            examples:
+              update device display name:
+                value:
+                  description: This is My Thingspro Edge.
+              update device hostname:
+                value:
+                  hostName: MyHost
+            schema:
+              properties:
+                description:
+                  description: This is My Thingspro Edge.
+                  example: MyThingsproEdge
+                  maximum: 512
+                  type: string
+                hostName:
+                  description: device hostname. <br> - Hostname must be between 1
+                    and 64 octets inclusive.<br> - Each label in the hostname (component
+                    separated by ".") must be between 1 and 63 octets inclusive. <br>
+                    - Each label must start with an ASCII alphabet character (a-z,
+                    A-Z), end with an ASCII alphanumeric character (a-z, A-Z, 0-9),
+                    and must contain only ASCII alphanumeric characters or hyphens
+                    (a-z, A-Z, 0-9, "-").
+                  example: Moxa
+                  maximum: 64
+                  minimum: 1
+                  pattern: ^[a-zA-Z]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*$
+                  type: string
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  biosVersion: 1.0.0S01
+                  cpu: ARMv7 Processor rev 2 (v7l)
+                  description: This is My Thingspro Edge.
+                  disk:
+                  - device: /dev/root
+                    free: 1905097752
+                    mount: /
+                    name: System
+                    percent: 35.5
+                    tags:
+                      free: systemDiskFree
+                      percent: systemDiskPercent
+                      used: systemDiskUsed
+                    total: 3206059008
+                    used: 1138657820
+                  firmwareVersion: 1.0.0
+                  hostName: MyHost
+                  lastBootTime: "2019-06-27T10:10:16+08:00"
+                  memorySize: 1056120832
+                  modelName: UC-8112A-ME-T-LX-EU
+                  serialNumber: IMOXA1234567
+                  softwareVersion: 1.0.0
+              schema:
+                $ref: '#/components/schemas/GeneralInformation'
+          description: System general configuration
+      security:
+      - auth: []
+      tags:
+      - general
+  /device/gps:
+    get:
+      description: Get gps configuration.
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  capabilities:
+                    interface:
+                    - GPS1
+                  interface: ""
+                  location:
+                    lat: 23.5
+                    lng: 121.2
+                  mode: manual
+              schema:
+                $ref: '#/components/schemas/GpsInformation'
+          description: gps configuration
+      security:
+      - auth: []
+      tags:
+      - gps
+    patch:
+      description: Patch gps configuration.
+      requestBody:
+        content:
+          application/json:
+            examples:
+              set auto mode with interface:
+                value:
+                  interface: GPS1
+                  mode: auto
+              set manual mode with lat/lng value:
+                value:
+                  location:
+                    lat: 23.5
+                    lng: 121.2
+                  mode: manual
+            schema:
+              $ref: '#/components/schemas/GpsSetMode'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                auto:
+                  value:
+                    data:
+                      capabilities:
+                        interface:
+                        - GPS1
+                      interface: GPS1
+                      location:
+                        lat: 0
+                        lng: 0
+                      mode: auto
+                disable:
+                  value:
+                    data:
+                      capabilities:
+                        interface:
+                        - GPS1
+                      interface: GPS1
+                      location:
+                        lat: 0
+                        lng: 0
+                      mode: auto
+                interval100:
+                  value:
+                    data:
+                      capabilities:
+                        interface:
+                        - GPS1
+                      interface: ""
+                      location:
+                        lat: 23.5
+                        lng: 121.2
+                      mode: manual
+                manual:
+                  value:
+                    data:
+                      capabilities:
+                        interface:
+                        - GPS1
+                      interface: ""
+                      location:
+                        lat: 23.5
+                        lng: 121.2
+                      mode: manual
+              schema:
+                $ref: '#/components/schemas/GpsInformation'
+          description: All gps configuration
+      security:
+      - auth: []
+      tags:
+      - gps
+  /device/network/wan:
+    get:
+      description: Get device route configuration of wan.
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  displayName: LAN1
+                  dns:
+                  - 192.168.3.1
+                  gateway: 192.168.3.254
+                  ip: 192.168.3.127
+                  name: enp0s31f6
+                  netmask: 255.255.255.0
+              schema:
+                $ref: '#/components/schemas/WANInformation'
+          description: Device route configuration of wan.
+      security:
+      - auth: []
+      tags:
+      - route
+      - wan
+  /device/network/wan/check:
+    get:
+      description: Get configuration of internet check alive
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  enable: true
+                  interval: 60
+                  retry: 3
+                  target: www.google.com
+                  timeout: 5
+              schema:
+                $ref: '#/components/schemas/InternetCheckAliveConfig'
+          description: Configuration of internet check alive
+      security:
+      - auth: []
+      tags:
+      - network
+    post:
+      description: Do internt check alive
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  status: ConnectedToInternet
+              schema:
+                $ref: '#/components/schemas/InternetCheckAlive_PostRsp'
+          description: Status of internet check alive
+      security:
+      - auth: []
+      tags:
+      - network
+    put:
+      description: Update configuration of internet check alive
+      requestBody:
+        content:
+          application/json:
+            example:
+              enable: true
+              interval: 120
+              retry: 5
+              target: www.moxa.com
+              timeout: 10
+            schema:
+              $ref: '#/components/schemas/InternetCheckAliveConfig'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  enable: true
+                  interval: 120
+                  retry: 5
+                  target: www.moxa.com
+                  timeout: 10
+              schema:
+                $ref: '#/components/schemas/InternetCheckAliveConfig'
+          description: Configuration of internet check alive
+      security:
+      - auth: []
+      tags:
+      - network
+  /device/route:
+    get:
+      description: Get device route configuration.
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  defaultRoute: LAN1
+                  priorityList:
+                  - LAN1
+                  - Cellular1
+              schema:
+                $ref: '#/components/schemas/RouteInformation'
+          description: Device route configuration.
+      security:
+      - auth: []
+      tags:
+      - route
+    put:
+      description: Update device route configuration.
+      requestBody:
+        content:
+          application/json:
+            example:
+              priorityList:
+              - Cellular1
+              - LAN1
+            schema:
+              $ref: '#/components/schemas/RouteInformation'
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  defaultRoute: Cellular1
+                  priorityList:
+                  - Cellular1
+                  - LAN1
+              schema:
+                $ref: '#/components/schemas/RouteInformation'
+          description: Device route configuration
+      security:
+      - auth: []
+      tags:
+      - route
+  /device/serials:
+    get:
+      description: Get serial interfaces configuration.
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                count: 2
+                data:
+                - baudRate: 9600
+                  capabilities:
+                    baudRate:
+                      range:
+                      - 300
+                      - 600
+                      - 1200
+                      - 1800
+                      - 2400
+                      - 4800
+                      - 9600
+                      - 19200
+                      - 38400
+                      - 57600
+                      - 115200
+                      - 230400
+                      - 460800
+                      - 921600
+                      special: false
+                    dataBits:
+                    - 5
+                    - 6
+                    - 7
+                    - 8
+                    flowControl:
+                    - none
+                    - hardware
+                    - software
+                    mode:
+                    - rs232
+                    - rs422
+                    - rs4852w
+                    - rs4854w
+                    parities:
+                    - none
+                    - odd
+                    - even
+                    - space
+                    - mark
+                    stopBits:
+                    - 1
+                    - 2
+                    - 1.5
+                  dataBits: 8
+                  device: /dev/ttyM0
+                  displayName: P1
+                  flowControl: hardware
+                  id: 1
+                  mode: rs232
+                  parity: none
+                  stopBits: 1
+                  type: serials
+                - baudRate: 115200
+                  capabilities:
+                    baudRate:
+                      range:
+                      - 300
+                      - 600
+                      - 1200
+                      - 1800
+                      - 2400
+                      - 4800
+                      - 9600
+                      - 19200
+                      - 38400
+                      - 57600
+                      - 115200
+                      - 230400
+                      - 460800
+                      - 921600
+                      special: false
+                    dataBits:
+                    - 5
+                    - 6
+                    - 7
+                    - 8
+                    flowControl:
+                    - none
+                    - hardware
+                    - software
+                    mode:
+                    - rs232
+                    - rs422
+                    - rs4852w
+                    - rs4854w
+                    parities:
+                    - none
+                    - odd
+                    - even
+                    - space
+                    - mark
+                    stopBits:
+                    - 1
+                    - 2
+                    - 1.5
+                  dataBits: 8
+                  device: /dev/ttyM1
+                  displayName: P2
+                  flowControl: software
+                  id: 2
+                  mode: rs422
+                  parity: none
+                  stopBits: 1
+                  type: serials
+              schema:
+                $ref: '#/components/schemas/AllSerialInformation'
+          description: All serial configuration
+      security:
+      - auth: []
+      tags:
+      - serials
+    patch:
+      description: Update serial interfaces configuration.
+      requestBody:
+        content:
+          application/json:
+            example:
+            - id: 1
+              mode: rs232
+            - baudRate: 19200
+              dataBits: 8
+              flowControl: none
+              id: 2
+              mode: rs4852w
+              parity: none
+              stopBits: 1
+            schema:
+              items:
+                $ref: '#/components/schemas/SerialConfiguration'
+              type: array
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                count: 2
+                data:
+                - baudRate: 9600
+                  dataBits: 8
+                  device: /dev/ttyM0
+                  displayName: P1
+                  flowControl: hardware
+                  id: 1
+                  mode: rs232
+                  parity: none
+                  stopBits: 1
+                  type: serials
+                - baudRate: 19200
+                  dataBits: 8
+                  device: /dev/ttyM1
+                  displayName: P2
+                  flowControl: none
+                  id: 2
+                  mode: rs4852w
+                  parity: none
+                  stopBits: 1
+                  type: serials
+              schema:
+                $ref: '#/components/schemas/AllSerialInformation'
+          description: All serial configuration
+      security:
+      - auth: []
+      tags:
+      - serials
+  /device/serials/{id}:
+    get:
+      description: Get serial interface configuration.
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  baudRate: 9600
+                  capabilities:
+                    baudRate:
+                      range:
+                      - 300
+                      - 600
+                      - 1200
+                      - 1800
+                      - 2400
+                      - 4800
+                      - 9600
+                      - 19200
+                      - 38400
+                      - 57600
+                      - 115200
+                      - 230400
+                      - 460800
+                      - 921600
+                      special: false
+                    dataBits:
+                    - 5
+                    - 6
+                    - 7
+                    - 8
+                    flowControl:
+                    - none
+                    - hardware
+                    - software
+                    mode:
+                    - rs232
+                    - rs422
+                    - rs4852w
+                    - rs4854w
+                    parities:
+                    - none
+                    - odd
+                    - even
+                    - space
+                    - mark
+                    stopBits:
+                    - 1
+                    - 2
+                    - 1.5
+                  dataBits: 8
+                  device: /dev/ttyM0
+                  displayName: P1
+                  flowControl: hardware
+                  id: 1
+                  mode: rs232
+                  parity: none
+                  stopBits: 1
+                  type: serials
+              schema:
+                $ref: '#/components/schemas/SerialInformation'
+          description: Serial interface configuration
+      security:
+      - auth: []
+      tags:
+      - serials
+    parameters:
+    - description: Serial interface id.
+      example: 1
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+    patch:
+      description: Update serial interface configuration.
+      requestBody:
+        content:
+          application/json:
+            example:
+              flowControl: software
+              mode: rs422
+            schema:
+              $ref: '#/components/schemas/SerialConfiguration'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  baudRate: 115200
+                  dataBits: 8
+                  device: /dev/ttyM0
+                  displayName: P1
+                  flowControl: software
+                  id: 1
+                  mode: rs422
+                  parity: none
+                  stopBits: 1
+                  type: serial
+              schema:
+                $ref: '#/components/schemas/SerialInformation'
+          description: Serial interface configuration.
+      security:
+      - auth: []
+      tags:
+      - serials
+  /device/time:
+    get:
+      description: Get system time configuration.
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  lastUpdateTime: '-'
+                  ntp:
+                    enable: false
+                    interval: 86400
+                    server: time.cloudflare.co
+                    source: timeserver
+                  time: "2015-03-26T16:27:48+08:00"
+                  timezone: Asia/Taipei
+              schema:
+                $ref: '#/components/schemas/TimeInformation'
+          description: Device time configuration.
+      security:
+      - auth: []
+      tags:
+      - time
+    patch:
+      description: Update system time configuration.
+      requestBody:
+        content:
+          application/json:
+            examples:
+              sync time from NTP time server:
+                value:
+                  ntp:
+                    enable: true
+                    interval: 6000
+                    server: time.cloudflare.com
+                    source: timeserver
+              update time (manual):
+                value:
+                  time: "2015-03-26T16:27:48+08:00"
+              update timezone:
+                value:
+                  timezone: Asia/Taipei
+            schema:
+              $ref: '#/components/schemas/TimeInformation'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  lastUpdateTime: '-'
+                  ntp:
+                    enable: false
+                    interval: 86400
+                    server: pool.ntp.org
+                    source: timeserver
+                  time: "2015-03-26T16:27:48+08:00"
+                  timezone: Asia/Taipei
+              schema:
+                $ref: '#/components/schemas/TimeInformation'
+          description: Device time configuration
+      security:
+      - auth: []
+      tags:
+      - time
+  /device/zoneinfo:
+    get:
+      description: Get current timezone information
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimezoneInfo'
+          description: success
+      security:
+      - auth: []
+      tags:
+      - time
+  /password-policy:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  atLeastOneDigit: true
+                  atLeastOneSpecial: true
+                  lengthMax: 256
+                  lengthMin: 8
+                  mixedUpperLowerLetters: true
+              schema:
+                $ref: '#/components/schemas/PasswordPolicy'
+          description: success
+      security:
+      - auth: []
+      summary: Get account security policy
+      tags:
+      - password-policy
+    put:
+      requestBody:
+        content:
+          application/json:
+            example:
+              atLeastOneDigit: true
+              atLeastOneSpecial: true
+              lengthMax: 256
+              lengthMin: 8
+              mixedUpperLowerLetters: true
+            schema:
+              $ref: '#/components/schemas/PasswordPolicy'
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  atLeastOneDigit: true
+                  atLeastOneSpecial: true
+                  lengthMax: 256
+                  lengthMin: 8
+                  mixedUpperLowerLetters: true
+              schema:
+                $ref: '#/components/schemas/PasswordPolicy'
+          description: success
+      security:
+      - auth: []
+      summary: Set account security policy
+      tags:
+      - password-policy
+  /permissions:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                count: 2
+                data:
+                - description: ""
+                  id: SYS_SECURITY_RW
+                  name: User/Role Management
+                - description: ""
+                  id: SYS_MAINTENANCE_RW
+                  name: Device Management
+              schema:
+                properties:
+                  count:
+                    type: integer
+                  data:
+                    items:
+                      $ref: '#/components/schemas/Permission'
+                    type: array
+          description: success
+      security:
+      - auth: []
+      summary: Query permissions
+      tags:
+      - users
+  /roles:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                count: 1
+                data:
+                - description: ""
+                  id: 1
+                  name: Administrator
+                  permissions:
+                  - SYS_SECURITY_RW
+                  - SYS_MAINTENANCE_RW
+                  users:
+                  - id: 1
+                    name: admin
+                  - id: 2
+                    name: myuser
+              schema:
+                properties:
+                  count:
+                    type: integer
+                  data:
+                    items:
+                      $ref: '#/components/schemas/Role'
+                    type: array
+          description: success
+      security:
+      - auth: []
+      summary: Query roles
+      tags:
+      - users
+    post:
+      requestBody:
+        content:
+          application/json:
+            example:
+              description: ""
+              name: myrole
+              permissions:
+              - SYS_SECURITY_RW
+            schema:
+              properties:
+                description:
+                  type: string
+                name:
+                  type: string
+                permissions:
+                  items:
+                    description: ID of permission
+                    type: string
+              required:
+              - name
+              - permissions
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  description: moxa best
+                  id: 2
+                  name: myrole
+                  permissions:
+                  - SYS_SECURITY_RW
+                  users: []
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Role'
+          description: success
+      security:
+      - auth: []
+      summary: create a role
+      tags:
+      - users
+  /roles/{id}:
+    delete:
+      responses:
+        "204":
+          description: success
+      security:
+      - auth: []
+      summary: Delete role by ID
+      tags:
+      - users
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  description: moxa best
+                  id: 2
+                  name: myrole
+                  permissions:
+                  - SYS_SECURITY_RW
+                  users: []
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Role'
+          description: success
+      security:
+      - auth: []
+      summary: get role by ID
+      tags:
+      - users
+    parameters:
+    - description: ID of role
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+    put:
+      requestBody:
+        content:
+          application/json:
+            example:
+              description: ""
+              name: myrole
+              permissions:
+              - SYS_SECURITY_RW
+            schema:
+              properties:
+                description:
+                  type: string
+                name:
+                  type: string
+                permissions:
+                  items:
+                    description: ID of permission
+                    type: string
+              required:
+              - name
+              - permissions
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  description: moxa best
+                  id: 2
+                  name: myrole
+                  permissions:
+                  - SYS_SECURITY_RW
+                  users: []
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Role'
+          description: success
+      security:
+      - auth: []
+      summary: update role by ID
+      tags:
+      - users
+  /services:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                app list:
+                  $ref: '#/components/examples/testAppList'
+              schema:
+                properties:
+                  data:
+                    items:
+                      $ref: '#/components/schemas/service'
+                    type: array
+          description: success
+      security:
+      - auth: []
+      summary: list all service accounts
+      tags:
+      - services
+    post:
+      requestBody:
+        content:
+          application/json:
+            examples:
+              create test app:
+                $ref: '#/components/examples/testAppRequest'
+            schema:
+              $ref: '#/components/schemas/service'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                create test app:
+                  $ref: '#/components/examples/testAppResponse'
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/service'
+          description: success
+      security:
+      - auth: []
+      summary: create new service account
+      tags:
+      - services
+  /services/{source}:
+    get:
+      parameters:
+      - description: the source name of this service.
+        in: query
+        name: source
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                service list:
+                  $ref: '#/components/examples/testAppList'
+              schema:
+                properties:
+                  data:
+                    items:
+                      $ref: '#/components/schemas/service'
+                    type: array
+          description: success
+      security:
+      - auth: []
+      summary: list service accounts with source
+      tags:
+      - services
+    parameters:
+    - description: the source category of service accounts
+      in: path
+      name: source
+      required: true
+      schema:
+        type: string
+  /services/{source}/{name}:
+    delete:
+      responses:
+        "204":
+          description: success
+      security:
+      - auth: []
+      summary: delete permission of service
+      tags:
+      - services
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                get test app:
+                  $ref: '#/components/examples/testAppResponse'
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/service'
+          description: success
+      security:
+      - auth: []
+      summary: get service account
+      tags:
+      - services
+    parameters:
+    - description: the source category of service accounts
+      in: path
+      name: source
+      required: true
+      schema:
+        type: string
+    - description: name of service
+      in: path
+      name: name
+      required: true
+      schema:
+        type: string
+    put:
+      requestBody:
+        content:
+          application/json:
+            examples:
+              update test app:
+                $ref: '#/components/examples/testAppRequest'
+            schema:
+              $ref: '#/components/schemas/putService'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                update test app:
+                  $ref: '#/components/examples/testAppResponse'
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/service'
+          description: success
+      security:
+      - auth: []
+      summary: update service account
+      tags:
+      - services
+  /sessions:
+    delete:
+      parameters:
+      - in: query
+        name: account
+        required: false
+        schema:
+          type: integer
+      responses:
+        "204":
+          description: success
+      security:
+      - auth: []
+      summary: delete sessions
+      tags:
+      - sessions
+    get:
+      parameters:
+      - in: query
+        name: account
+        required: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                - access: "2022-10-13T01:31:49.334247271Z"
+                  create: "2022-10-13T01:31:48.964368971Z"
+                  id: 1
+                  userid: 1
+                  username: admin
+                - access: "2022-10-13T01:35:38.919457191Z"
+                  create: "2022-10-13T01:35:38.919457191Z"
+                  id: 2
+                  userid: 2
+                  username: terry
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/sessions'
+          description: success
+      security:
+      - auth: []
+      summary: get session list
+      tags:
+      - sessions
+  /sessions/{id}:
+    delete:
+      responses:
+        "200":
+          description: success
+      security:
+      - auth: []
+      summary: delete session by ID
+      tags:
+      - sessions
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                - access: "2022-10-13T01:31:49.334247271Z"
+                  create: "2022-10-13T01:31:48.964368971Z"
+                  id: 1
+                  userid: 1
+                  username: admin
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/session'
+          description: success
+      security:
+      - auth: []
+      summary: get session by ID
+      tags:
+      - sessions
+    parameters:
+    - description: ID of session
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+  /system/configuration:
+    get:
+      responses:
+        "200":
+          content:
+            application/tar+gz:
+              schema:
+                format: binary
+                type: string
+          description: get the export configurations tar.gz
+      security:
+      - auth: []
+      summary: Export configurations
+      tags:
+      - configuration
+    put:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              properties:
+                file:
+                  description: configuration file
+                  format: binary
+                  type: string
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  diff: null
+                  fileName: 2022-09-01-10-55-export-configuration.tar.gz
+                  fileSize: 46272
+                  sections:
+                  - import: true
+                    name: systemService
+                  - import: true
+                    name: network
+                  - import: true
+                    name: device
+                  - import: true
+                    name: userAccount
+                  - import: true
+                    name: taghub
+                  - import: true
+                    name: server
+                  - import: true
+                    name: audit
+                  - import: true
+                    name: firewall
+              schema:
+                properties:
+                  data:
+                    properties:
+                      diff:
+                        properties:
+                          current:
+                            properties:
+                              model:
+                                type: string
+                              tpeversion:
+                                type: string
+                            type: object
+                          imported:
+                            properties:
+                              model:
+                                type: string
+                              tpeversion:
+                                type: string
+                            type: object
+                        type: object
+                      filename:
+                        type: string
+                      filesize:
+                        type: integer
+                      sections:
+                        properties:
+                          import:
+                            type: boolean
+                          name:
+                            type: string
+                        type: object
+          description: success
+        "400":
+          content:
+            application/json:
+              examples:
+                diffModel:
+                  summary: AIG model different
+                  value:
+                    error:
+                      code: 10003
+                      message: 'unknown model: AIG-XXX'
+                diffVersion:
+                  summary: AIG version different
+                  value:
+                    error:
+                      code: 10004
+                      message: 'version not supported: 1.X'
+                extract:
+                  summary: invalid extraction
+                  value:
+                    error:
+                      code: 10001
+                      message: 'extract: invalid file or authentication failed'
+                filesize:
+                  summary: file size is over limitation to 5M
+                  value:
+                    error:
+                      code: 10000
+                      message: file is over size
+              schema:
+                properties:
+                  error:
+                    properties:
+                      code:
+                        type: integer
+                      message:
+                        type: string
+          description: error
+      security:
+      - auth: []
+      summary: Upload configurations
+      tags:
+      - configuration
+  /system/httpserver:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                configResponse:
+                  $ref: '#/components/examples/configResponse'
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/httpserverConfig'
+          description: success
+      security:
+      - auth: []
+      summary: Get httpserver configuration
+      tags:
+      - httpserver
+    patch:
+      requestBody:
+        content:
+          application/json:
+            examples:
+              configRequest:
+                $ref: '#/components/examples/configRequest'
+            schema:
+              $ref: '#/components/schemas/httpserverConfig'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                configResponse:
+                  $ref: '#/components/examples/configResponse'
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/httpserverConfig'
+          description: success
+      security:
+      - auth: []
+      summary: Set httpserver configuration partially
+      tags:
+      - httpserver
+    put:
+      requestBody:
+        content:
+          multipart/form-data:
+            example:
+              certFile: '-----BEGIN CERTIFICATE-----MIIDnTCCAoWgAwIBAgIRAKBIb0KyTZbvZmkpPERcf/MwDQYJKoZIhvcNAQELBQAwajEPMA0GA1UECAwGVGFpd2FuMRgwFgYDVQQHDA9OZXcgVGFpcGVpIENpdHkxEjAQBgNVBAoMCU1veGEgSW5jLjEpMCcGA1UEAwwgVGhpbmdzUHJvIEVkZ2UgUm9vdCBDQSBmb3IgSFRUUFMwHhcNMjMwMjE2MDMyOTI5WhcNMjUwNTIwMDMyOTI5WjBWMQ8wDQYDVQQIEwZUYWl3YW4xGDAWBgNVBAcTD05ldyBUYWlwZWkgQ2l0eTESMBAGA1UEChMJTW94YSBJbmMuMRUwEwYDVQQDEwxUQkJEQjExNzkyNDIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDqUyGbx5EJnKpihxuF0Q4zjD4ydm5Y3t9RwngKILJ/K8eO/J+H7GdB9izdIEysWLtrPAZHNJ+e2PuAawVog/btcP5wSHc+H1dl2afheg1WYNXT2aFH7yMf+/e02tm0lj/my2/MabKJEV9S3dLsNxGWy45/LWh/4L9bVZnwODVjPgvxc9OGAvc6h7Taf7AaCwea7qXh0so+25kMD6eZsZj4a5VDu4jKGGYhC2IUgN7qp529/s04SwkB/9l7RiKR5RWAS9PLQ8AoZ8YNnJZZX8knnSaeDwZy+OgKzf47yEJRi4ajF2ex9pQnAm35/jJY+LPupK0y5YB0mJowi9RHnpIFAgMBAAGjUjBQMA4GA1UdDwEB/wQEAwIFoDATBgNVHSUEDDAKBggrBgEFBQcDATAMBgNVHRMBAf8EAjAAMBsGA1UdEQQUMBKHBAp7DRCHBH8AAAGHBMCoBH8wDQYJKoZIhvcNAQELBQADggEBAJDxQyzy43+bfsP44hIdYH3VD/Edn2k6Od61O2yjSEgWOaKjprBW3KpNngPjeJGPfkxzonIT0xJ9Tr1DIwtjOOMlJkW9dBTuf7jT3hdJ5yYN8X5kF7ebwL+72AxnM5XLndc8I+r5JVKBod1JwON1c+wSXJGBDFTKo1AUFlaJWSATRNfLAZXZx8rhOpzJbR0JtLVGbffz9R1o2L875jfCYC/M8nU7SmzjUj8itRO+5OZEGLcqzBgTvcfiYoYKMnGKNrJYBbQggL9Nfqr/92EenBlOp6UkdPSp8dwMFoXtGFQ2symwJtldbo/9fIMj2oBkFa4EgEgSnkJK42bw0n4ApYg=-----END
+                CERTIFICATE-----'
+              httpEnable: false
+              httpPort: 80
+              httpsEnable: true
+              httpsPort: 8443
+              keyFile: '-----BEGIN RSA PRIVATE KEY-----MIIEogIBAAKCAQEA6lMhm8eRCZyqYocbhdEOM4w+MnZuWN7fUcJ4CiCyfyvHjvyfh+xnQfYs3SBMrFi7azwGRzSfntj7gGsFaIP27XD+cEh3Ph9XZdmn4XoNVmDV09mhR+8jH/v3tNrZtJY/5stvzGmyiRFfUt3S7DcRlsuOfy1of+C/W1WZ8Dg1Yz4L8XPThgL3Ooe02n+wGgsHmu6l4dLKPtuZDA+nmbGY+GuVQ7uIyhhmIQtiFIDe6qedvf7NOEsJAf/Ze0YikeUVgEvTy0PAKGfGDZyWWV/JJ50mng8GcvjoCs3+O8hCUYuGoxdnsfaUJwJt+f4yWPiz7qStMuWAdJiaMIvUR56SBQIDAQABAoIBAFYku51GT5amBql0G/Uk9sCSlSb+DPEU9ipbgL/QZ26DDLkPPCK/EPLZ6oJcZnORp0zz4yb4PJosEMGUFofmw7dkq9VhfpzS7tFdo+8rbI3Nya45OqZ0TohqnBTbw980wUc6kN4oGV90iIOxUuJOGGREbx1n9xvT5uVP4ejC8TWLHKNPx2ujf8rTWQrURTcHwZqVsqQZvNRNWtRhzd9juyxKvJw18W01Hbbfnf7O35J6ia7ySG2m1Sg6sKgjSmp2GtHN3RJywCRQm1nO9j4InZzTJQ+N6cP+Rn6W8SM3FhPB4JrYzYvgBg7lKN1AGFLmE3vOw/uY7G6TqfsHZegnA4ECgYEA/ygMvdXP8Ord9ZTO0RUbG7q+JZN68dgDXzdFtTqiLzhyt6F+VOWB2SFlA/a/x0gTXf69Rv1KOCWBHgMxb3dSTxud1NlfO3hb7H1H3ywC3+GPU5O+BhMzMqlQmYKg6XD0kwVRzbZUdBhEYYnwzSRXbl8VvDChdwrvZzZu9vkZW2ECgYEA6xlzYZpdYkgxHgoDysOPEDNfjGkdiIpEoDMzQ5G8xcxcxz8TevGpjMv+7rmDx3j9YDwVqIe/k857TS2jo3SAgbt42TXgXju7T+qv0Walf2r1e4rlUb7AzhNuKM3vTiL3tBmbkBgSWjY2uZCsSyF1E4QUhwFMwo5/nZtqEesWfSUCgYAwh7yMqssnJnTbDdecWuhSCN27peZfc1eI16lxg9pvIsxm8tdlbFWbJ8ffziHB1IqieR4lD237ad66B59ydP55v2XwovuDAyxwuY9e+i79yBgLrHEbFLHLM/r5h6f1Xp+WCw/5EXHUtvzilGrxibT7cChhJ9q+Gp1YQzktzkktYQKBgCSojEg81LDdhuMjNqIoSieBizWOsm82+CpusWCo2eGR0ymyWSxDgGeW64J35Od2ozOdStdDi4jVmn5XTnvPT7Zq8BYWg4zODZARjSa+tbGfkPWZm9ZaQyAfAX9VVSo+45buo0YdqsbsSy42M9dnOSU45CaE+l4f8CA4OpreqFwNAoGAN2jyg/sp120UJUPfLlg02eTNT9whrtM9hL6lE5JMVx+aPmrBFT9aojgJByaa+w7pOVSkpcnsNir63Tpzp8luwJPDoIj94KeOmkn+GlsHBfAdFLFTTSFtdCk08ZUrCMcizsSUuPc22WP3YouB5A+p+Gvp7saPTYlMMO6k8qeRQfs=-----END
+                RSA PRIVATE KEY-----'
+            schema:
+              properties:
+                certFile:
+                  description: |
+                    (form-data only) certificate for https. The suffix of filename must be one of `.crt`, `.cer` or `.pem` with PEM format which the content starts with `----- BEGIN CERTIFICATE -----`
+                  format: binary
+                  type: string
+                httpEnable:
+                  type: boolean
+                httpPort:
+                  description: listen port for http
+                  type: integer
+                httpsEnable:
+                  type: boolean
+                httpsPort:
+                  description: listen port for https
+                  type: integer
+                ipv6Enable:
+                  type: boolean
+                keyFile:
+                  description: |
+                    (form-data only) key for https. The suffix of filename must be one of `.key`, `.pk` or `.pem` with PEM format which the content starts with `----- BEGIN RSA PRIVATE KEY -----`
+                  format: binary
+                  type: string
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                configResponse:
+                  $ref: '#/components/examples/configResponse'
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/httpserverConfig'
+          description: success
+      security:
+      - auth: []
+      summary: Set httpserver configuration
+      tags:
+      - httpserver
+  /system/log:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  desiredDiskCacheSizeMB: 100
+                  disks:
+                  - device: /dev/mapper/p4_encrypte
+                    free: 858275840
+                    mount: /var/log/
+                    name: System
+                    percent: 9.5
+                    total: 1021005824
+                    used: 93106176
+                  enableTimeToLiveSec: false
+                  targetDiskName: System
+                  timeToLiveSec: 86400
+              schema:
+                $ref: '#/components/schemas/SyslogSetting'
+          description: success
+      security:
+      - auth: []
+      summary: Get System Log setting configuration
+      tags:
+      - system log
+    put:
+      requestBody:
+        content:
+          application/json:
+            example:
+              desiredDiskCacheSizeMB: 2
+              enableTimeToLiveSec: true
+              targetDiskName: System
+              timeToLiveSec: 86400
+            schema:
+              $ref: '#/components/schemas/SyslogSetting'
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  desiredDiskCacheSizeMB: 2
+                  disks:
+                  - device: /dev/mapper/p4_encrypte
+                    free: 858275840
+                    mount: /var/log/
+                    name: System
+                    percent: 9.5
+                    total: 1021005824
+                    used: 93106176
+                  enableTimeToLiveSec: true
+                  targetDiskName: System
+                  timeToLiveSec: 86400
+              schema:
+                items:
+                  $ref: '#/components/schemas/SyslogSetting'
+                type: object
+          description: success
+      security:
+      - auth: []
+      summary: Set System Log setting configuration
+      tags:
+      - system log
+  /system/provision:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  enable: true
+                  schedule:
+                    disableAfterSec: 900
+                    enable: true
+              schema:
+                properties:
+                  data:
+                    properties:
+                      enable:
+                        description: enable discovery service
+                        type: boolean
+                      schedule:
+                        properties:
+                          disableAfterSec:
+                            description: time (in seconds) of period
+                            type: integer
+                          enable:
+                            description: schedule to disable discovery service after
+                              a period
+                            type: boolean
+                        type: object
+          description: success
+      security:
+      - auth: []
+      summary: Get discovery service status
+      tags:
+      - provision
+    put:
+      requestBody:
+        content:
+          application/json:
+            example:
+              enable: true
+              schedule:
+                disableAfterSec: 900
+                enable: true
+            schema:
+              properties:
+                enable:
+                  description: enable discovery service
+                  type: boolean
+                schedule:
+                  properties:
+                    disableAfterSec:
+                      description: time (in seconds) of period
+                      type: integer
+                    enable:
+                      description: schedule to disable discovery service after a period
+                      type: boolean
+                  type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  enable: true
+                  schedule:
+                    disableAfterSec: 900
+                    enable: true
+              schema:
+                properties:
+                  data:
+                    properties:
+                      enable:
+                        description: enable discovery service
+                        type: boolean
+                      schedule:
+                        properties:
+                          disableAfterSec:
+                            description: time (in seconds) of period
+                            type: integer
+                          enable:
+                            description: schedule to disable discovery service after
+                              a period
+                            type: boolean
+                        type: object
+          description: success
+      security:
+      - auth: []
+      summary: Set discovery service configuration
+      tags:
+      - provision
+  /system/reboot:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  cronSchedule: 0 0 ? * *
+                  enableScheduler: true
+                  lastBootAt: "2023-04-21T13:06:41+08:00"
+                  now: false
+              schema:
+                properties:
+                  data:
+                    properties:
+                      cronSchedule:
+                        format: string
+                        type: string
+                      enableScheduler:
+                        type: boolean
+                      lastBootAt:
+                        type: string
+                      now:
+                        type: boolean
+          description: success
+      security:
+      - auth: []
+      summary: Get reboot configuration
+      tags:
+      - reboot
+    put:
+      requestBody:
+        content:
+          application/json:
+            examples:
+              now:
+                summary: now
+                value:
+                  now: true
+              scheduler:
+                summary: reboot at 00:00:00am every day
+                value:
+                  cronSchedule: 0 0 ? * *
+                  enableScheduler: true
+            schema:
+              properties:
+                cronSchedule:
+                  description: crontab (https://linux.die.net/man/5/crontab)
+                  type: string
+                enableScheduler:
+                  type: boolean
+                now:
+                  type: boolean
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  cronSchedule: 0 0 ? * *
+                  enableScheduler: true
+                  lastBootAt: "2023-04-21T13:06:41+08:00"
+                  now: false
+              schema:
+                properties:
+                  data:
+                    properties:
+                      cronSchedule:
+                        format: string
+                        type: string
+                      enableScheduler:
+                        type: boolean
+                      lastBootAt:
+                        type: string
+                      now:
+                        type: boolean
+          description: success
+      security:
+      - auth: []
+      summary: Reboot system
+      tags:
+      - reboot
+  /system/reset-default:
+    put:
+      parameters:
+      - in: query
+        name: mode
+        schema:
+          default: system
+          enum:
+          - factory
+          - system
+          type: string
+      - in: query
+        name: scopes
+        schema:
+          enum:
+          - keep-network-setting
+          type: string
+      responses:
+        "200":
+          description: success
+        "400":
+          description: |
+            1. unsupported mode
+            2. status is not ready
+            3. invalid scopes
+      security:
+      - auth: []
+      summary: reset system to default configuration
+      tags:
+      - reset-default
+  /system/update:
+    get:
+      description: returns available updates
+      operationId: getUpdates
+      parameters:
+      - description: Get real-time updates or by last scan
+        in: query
+        name: scan
+        schema:
+          example: true
+          type: boolean
+      - description: Get all available packages of product or just main
+        in: query
+        name: patches
+        schema:
+          example: false
+          type: boolean
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                properties:
+                  checktime:
+                    example: "2023-05-02T03:51:22Z"
+                    type: string
+                  count:
+                    example: 1
+                    format: int32
+                    type: integer
+                  data:
+                    items:
+                      $ref: '#/components/schemas/AvailableUpdate'
+                    type: array
+                type: object
+          description: Available updates
+      security:
+      - auth: []
+      summary: Get available updates for current product
+      tags:
+      - Update
+    put:
+      description: Trigger update(s) over the air or by offline file
+      operationId: update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                example: openssl
+                type: string
+              type: array
+          multipart/form-data:
+            schema:
+              properties:
+                file:
+                  format: binary
+                  type: string
+                verificationFile:
+                  format: binary
+                  type: string
+              type: object
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                properties:
+                  count:
+                    example: 1
+                    format: int32
+                    type: integer
+                  data:
+                    items:
+                      example: openssl
+                      type: string
+                    type: array
+                  message:
+                    example: Successfully trigger
+                    type: string
+                type: object
+          description: Successfully trigger the update
+        "400":
+          content:
+            application/json:
+              schema:
+                properties:
+                  error:
+                    properties:
+                      code:
+                        example: 400
+                        format: int32
+                        type: integer
+                      message:
+                        example: match selected packages is empty
+                        type: string
+                    type: object
+                type: object
+          description: Match selected packages is empty
+      security:
+      - auth: []
+      summary: Trigger update
+      tags:
+      - Update
+  /system/update/history:
+    get:
+      description: Returns the update history
+      operationId: getUpdateHistory
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/UpdateRecord'
+                type: array
+          description: Successfully get the history
+      security:
+      - auth: []
+      summary: Get update history
+      tags:
+      - Update
+  /system/update/settings:
+    get:
+      description: Returns the update settings
+      operationId: getUpdateSettings
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateSettings'
+          description: Successfully get the history
+      security:
+      - auth: []
+      summary: Get update settings
+      tags:
+      - Update
+    patch:
+      description: Returns the update settings
+      operationId: patchUpdateSettings
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateSettings'
+          description: Successfully get the history
+      security:
+      - auth: []
+      summary: Patch update setting
+      tags:
+      - Update
+    put:
+      description: Returns the update settings
+      operationId: putUpdateSettings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSettings'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateSettings'
+          description: Successfully put the update settings
+      security:
+      - auth: []
+      summary: Put update settings
+      tags:
+      - Update
+  /users:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                accountResponse:
+                  $ref: '#/components/examples/accountsResponse'
+              schema:
+                properties:
+                  count:
+                    type: integer
+                  data:
+                    $ref: '#/components/schemas/Account'
+                type: object
+          description: success
+      security:
+      - auth: []
+      summary: Query account list
+      tags:
+      - users
+    post:
+      requestBody:
+        content:
+          application/json:
+            examples:
+              accountRequest:
+                $ref: '#/components/examples/accountRequest'
+            schema:
+              $ref: '#/components/schemas/Account'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                accountResponse:
+                  $ref: '#/components/examples/accountResponse'
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Account'
+          description: success
+      security:
+      - auth: []
+      summary: Add new account
+      tags:
+      - users
+  /users/{id}:
+    delete:
+      parameters:
+      - description: ID of user
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        "204":
+          description: success
+      security:
+      - auth: []
+      summary: Delete account by ID
+      tags:
+      - users
+    get:
+      parameters:
+      - description: ID of account
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                accountResponse:
+                  $ref: '#/components/examples/accountResponse'
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Account'
+          description: success
+        "403":
+          description: account without Administrator role can not access this API
+      security:
+      - auth: []
+      summary: Query account by ID
+      tags:
+      - users
+    put:
+      parameters:
+      - description: ID of user
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            examples:
+              accountRequest:
+                $ref: '#/components/examples/accountRequest'
+            schema:
+              $ref: '#/components/schemas/Account'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                accountResponse:
+                  $ref: '#/components/examples/accountResponse'
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Account'
+          description: success
+        "400":
+          description: bad request
+        "403":
+          description: account without Administrator role can not access this API
+      security:
+      - auth: []
+      summary: Update account by ID
+      tags:
+      - users
+  /users/{id}/password:
+    put:
+      parameters:
+      - description: ID of account
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            example:
+              newPassword: "123456"
+              oldPassword: "654321"
+            schema:
+              properties:
+                newPassword:
+                  type: string
+                oldPassword:
+                  description: account with admin role do not need pass oldPassword
+                  type: string
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                accountResponse:
+                  $ref: '#/components/examples/accountResponse'
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Account'
+          description: success
+        "400":
+          description: bad request
+        "403":
+          description: account without Administrator role can not access this API
+      security:
+      - auth: []
+      summary: Update account's password by ID
+      tags:
+      - users
+  /users/me:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  changedPasswordAt: null
+                  createdAt: "2019-09-24T05:52:28.912234779Z"
+                  email: null
+                  expiredAfter: null
+                  id: 3
+                  isActive: true
+                  loginAt: "0001-01-01T00:00:00Z"
+                  name: myuser
+                  permissions:
+                  - SYS_MAINTENANCE_RW
+                  - SYS_SECURITY_RW
+                  remindToChangePassword: null
+                  roles:
+                  - id: 1
+                    name: Administrator
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Account'
+          description: success
+      security:
+      - auth: []
+      summary: Query who I am
+      tags:
+      - users
+    put:
+      requestBody:
+        content:
+          application/json:
+            example:
+              email: aa@aaa.aaa
+              expiredAfter: "2023-01-31T16:00:00.000Z"
+              isActive: true
+              roles:
+              - id: 1
+            schema:
+              properties:
+                email:
+                  type: string
+                expiredAfter:
+                  type: string
+                isActive:
+                  type: boolean
+                roles:
+                  items:
+                    type: integer
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  changedPasswordAt: null
+                  createdAt: "2019-09-24T05:52:28.912234779Z"
+                  email: null
+                  expiredAfter: null
+                  id: 3
+                  isActive: true
+                  loginAt: "0001-01-01T00:00:00Z"
+                  name: myuser
+                  permissions:
+                  - SYS_MAINTENANCE_RW
+                  - SYS_SECURITY_RW
+                  roles:
+                  - id: 1
+                    name: Administrator
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Account'
+          description: success
+      security:
+      - auth: []
+      summary: Update current account's information
+      tags:
+      - users
+  /users/me/password:
+    put:
+      requestBody:
+        content:
+          application/json:
+            example:
+              newPassword: "123456"
+              oldPassword: moxa1234
+            schema:
+              properties:
+                newPassword:
+                  type: string
+                oldPassword:
+                  description: account with admin role do not need pass oldPassword
+                  type: string
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              example:
+                data:
+                  changedPasswordAt: null
+                  createdAt: "2019-09-24T05:52:28.912234779Z"
+                  email: null
+                  expiredAfter: null
+                  id: 3
+                  isActive: true
+                  loginAt: "0001-01-01T00:00:00Z"
+                  name: myuser
+                  permissions:
+                  - SYS_MAINTENANCE_RW
+                  - SYS_SECURITY_RW
+                  roles:
+                  - id: 1
+                    name: Administrator
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Account'
+          description: success
+      security:
+      - auth: []
+      summary: Update current account's password
+      tags:
+      - users
+components:
+  examples:
+    GetCellular:
+      summary: cellular information of requested id
+      value:
+        CurrentProfileName: Profile-1
+        capabilities:
+          sim: 1
+        cellId: "6326"
+        displayName: Cellular1
+        dns: []
+        enable: false
+        gateway: ""
+        iccId: "89886971410730170000"
+        id: 1
+        imei: "359841080332053"
+        imsi: "466977300046885"
+        ip: ""
+        keepalive:
+          enable: true
+          intervalSec: 60
+          targetHost: 8.8.8.8
+        lac: "11114"
+        mac: "00:00:11:12:13:14"
+        mode: lte
+        name: wwan0
+        netmask: ""
+        operatorName: ""
+        pinRetryRemain: -1
+        profileTimeout: 120
+        profiles:
+        - name: SIM1
+          pdpContext:
+            apn: internet
+            auth:
+              password: ""
+              username: ""
+            type: ipv4
+          pinCode: "0000"
+          simSlot: 1
+        signal:
+          rsrp: 0
+          rssi: -67
+        signalStrength: 4
+        status: ready
+        tac: ""
+        type: cellular
+    GetCellulars:
+      summary: all cellulars information
+      value:
+        count: 1
+        data:
+        - CurrentProfileName: Profile-1
+          capabilities:
+            sim: 1
+          cellId: "6326"
+          displayName: Cellular1
+          dns: []
+          enable: false
+          gateway: ""
+          iccId: "89886971410730170000"
+          id: 1
+          imei: "359841080332053"
+          imsi: "466977300046885"
+          ip: ""
+          keepalive:
+            enable: true
+            intervalSec: 60
+            targetHost: 8.8.8.8
+          lac: "11114"
+          mac: "00:00:11:12:13:14"
+          mode: lte
+          name: wwan0
+          netmask: ""
+          operatorName: ""
+          pinRetryRemain: -1
+          profileTimeout: 120
+          profiles:
+          - name: SIM1
+            pdpContext:
+              apn: internet
+              auth:
+                password: ""
+                username: ""
+              type: ipv4
+            pinCode: "0000"
+            simSlot: 1
+          signal:
+            rsrp: 0
+            rssi: -67
+          signalStrength: 4
+          status: ready
+          tac: ""
+          type: cellular
+    NoCellularModuleAvailable:
+      summary: no cellualr module
+      value:
+        data: []
+    PutCellularRequest:
+      summary: put a cellular settings
+      value:
+        enable: true
+        keepalive:
+          enable: true
+          intervalSec: 60
+          targetHost: 8.8.8.8
+        profileTimeout: 120
+        profiles:
+        - name: SIM1
+          pdpContext:
+            apn: internet
+            auth:
+              password: ""
+              username: ""
+            type: ipv4
+          pinCode: "0000"
+          simSlot: 1
+    PutCellularResponse:
+      summary: updated cellular settings
+      value:
+        displayName: Cellular1
+        enable: true
+        id: 1
+        keepalive:
+          enable: true
+          intervalSec: 60
+          targetHost: 8.8.8.8
+        profileTimeout: 120
+        profiles:
+        - name: SIM1
+          pdpContext:
+            apn: internet
+            auth:
+              password: ""
+              username: ""
+            type: ipv4
+          pinCode: "0000"
+          simSlot: 1
+    PutCellularsRequest:
+      summary: put cellulars settings request
+      value:
+      - enable: true
+        id: 1
+        keepalive:
+          enable: true
+          intervalSec: 60
+          targetHost: 8.8.8.8
+        profileTimeout: 120
+        profiles:
+        - name: SIM1
+          pdpContext:
+            apn: internet
+            auth:
+              password: ""
+              username: ""
+            type: ipv4
+          pinCode: "0000"
+          simSlot: 1
+    PutCellularsResponse:
+      summary: updated cellulars settings
+      value:
+      - displayName: Cellular1
+        enable: true
+        id: 1
+        keepalive:
+          enable: true
+          intervalSec: 60
+          targetHost: 8.8.8.8
+        profileTimeout: 120
+        profiles:
+        - name: SIM1
+          pdpContext:
+            apn: internet
+            auth:
+              password: ""
+              username: ""
+            type: ipv4
+          pinCode: "0000"
+          simSlot: 1
+    accountRequest:
+      summary: account config request
+      value:
+        expiredAfter: "2050-01-31T16:00:00.000Z"
+        isActive: true
+        name: admin
+        password: admin@123
+        roles:
+        - id: 1
+    accountResponse:
+      summary: account info response
+      value:
+        data:
+          changedPasswordAt: null
+          createdAt: "2019-09-24T05:52:28.912234779Z"
+          description: null
+          email: null
+          expiredAfter: "2050-01-31T16:00:00.000Z"
+          id: 1
+          isActive: true
+          lastReadLogID: 0
+          loginAt: "0001-01-01T00:00:00Z"
+          name: admin
+          permissions:
+          - SYS_MAINTENANCE_RW
+          - SYS_SECURITY_RW
+          remindPasswordExpiredAfter: null
+          roles:
+          - id: 1
+            name: Administrator
+    accountsResponse:
+      summary: accounts info response
+      value:
+        count: 1
+        data:
+        - changedPasswordAt: null
+          createdAt: "2019-09-24T05:52:28.912234779Z"
+          description: null
+          email: null
+          expiredAfter: "2050-01-31T16:00:00.000Z"
+          id: 1
+          isActive: true
+          lastReadLogID: 0
+          loginAt: "0001-01-01T00:00:00Z"
+          name: admin
+          permissions:
+          - SYS_MAINTENANCE_RW
+          - SYS_SECURITY_RW
+          remindPasswordExpiredAfter: null
+          roles:
+          - id: 1
+            name: Administrator
+    configRequest:
+      summary: config request example
+      value:
+        httpEnable: false
+        httpPort: 80
+        httpsEnable: true
+        httpsPort: 8443
+        ipv6Enable: false
+    configResponse:
+      summary: config response example
+      value:
+        data:
+          httpEnable: false
+          httpPort: 80
+          httpsEnable: true
+          httpsPort: 8443
+          ipv6Enable: false
+    testAppList:
+      value:
+        data:
+        - Addon:
+          - id: APP_TEST_RW
+            name: My test app permission
+          DisplayName: My Test APP
+          Name: testapp
+          Required:
+          - SYS_MANAGEMENT_RW
+          - SRV_AIE_RW
+          Source: api
+    testAppRequest:
+      value:
+        Addon:
+        - id: APP_TEST_RW
+          name: My test app permission
+        DisplayName: My Test APP
+        Name: testapp
+        Required:
+        - SYS_MANAGEMENT_RW
+        - SRV_AIE_RW
+        Source: api
+    testAppResponse:
+      value:
+        data:
+          Addon:
+          - id: APP_TEST_RW
+            name: My test app permission
+          DisplayName: My Test APP
+          Name: testapp
+          Required:
+          - SYS_MANAGEMENT_RW
+          - SRV_AIE_RW
+          Source: api
+  schemas:
+    Account:
+      properties:
+        changedPasswordAt:
+          format: date-time
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+        description:
+          type: string
+        email:
+          type: string
+        expiredAfter:
+          format: date-time
+          type: string
+        id:
+          type: integer
+        isActive:
+          type: boolean
+        lastReadLogID:
+          type: integer
+        loginAt:
+          format: date-time
+          type: string
+        name:
+          type: string
+        permissions:
+          items:
+            description: ID of permission
+            type: string
+          type: array
+        remindPasswordExpiredAfter:
+          format: date-time
+          type: string
+        roles:
+          items:
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+          type: array
+    AllEthernetDhcp:
+      properties:
+        data:
+          items:
+            properties:
+              count:
+                description: Array length.
+                example: 1
+                type: integer
+              enable:
+                description: Set interface UP.
+                type: boolean
+              enableDhcp:
+                description: Enable (`true`) the dhcp client.
+                type: boolean
+              id:
+                description: Identifier of an Ethernet interface.
+                minimum: 1
+                type: integer
+              wan:
+                description: Define the interface type is WAN (`true`) or LAN (`false`)
+                type: boolean
+            required:
+            - enable
+            - enableDhcp
+            - wan
+            - id
+          type: array
+    AllEthernetInformation:
+      properties:
+        count:
+          description: Array length.
+          example: 1
+          type: integer
+        data:
+          items:
+            $ref: '#/components/schemas/EthernetItem'
+            required:
+            - enable
+            - enableDhcp
+            - wan
+            - ip
+          type: array
+      title: All ethernet interfaces configuration
+    AllEthernetStaticIP:
+      properties:
+        data:
+          items:
+            properties:
+              count:
+                description: Array length.
+                example: 1
+                type: integer
+              dns:
+                description: |
+                  The Domain Name System (DNS) is a hierarchical distributed naming
+                  system for computers, services, or any resource connected to the
+                  Internet or a private network.
+                items:
+                  pattern: ^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$
+                  type: string
+                type: array
+              enable:
+                description: Set interface UP.
+                type: boolean
+              enableDhcp:
+                description: Using the static IP (`false`).
+                type: boolean
+              gateway:
+                description: Gateway is a router or a proxy server that routes between
+                  networks.
+                pattern: ^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$
+                type: string
+              id:
+                description: Identifier of an Ethernet interface.
+                minimum: 1
+                type: integer
+              ip:
+                description: IP address for the Ethernet interface.
+                pattern: ^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$
+                type: string
+              netmask:
+                description: Interface netmask.
+                pattern: ^(?:(?:254|252|248|240|224|192|128)\.0\.0\.0|255\.(?:254|252|248|240|224|192|128|0)\.0\.0|255\.255\.(?:254|252|248|240|224|192|128|0)\.0|255\.255\.255\.(?:254|252|248|240|224|192|128|0))$
+                type: string
+              wan:
+                description: Define the interface type is WAN (`true`) or LAN (`false`)
+                type: boolean
+            required:
+            - enable
+            - ip
+            - netmask
+            - enableDhcp
+            - wan
+            - id
+          type: array
+    AllSerialInformation:
+      properties:
+        count:
+          description: Array length.
+          example: 1
+          type: integer
+        data:
+          items:
+            $ref: '#/components/schemas/SerialItem'
+          type: array
+      title: All serial interfaces configuration
+    AuditLog:
+      properties:
+        count:
+          description: Get Audit log count
+          type: integer
+        data:
+          properties:
+            category:
+              description: Audit category
+              type: string
+            createdAt:
+              description: Audit time in RFC3339 format (default:now).
+              type: string
+            detail:
+              description: Detail information of the audit log
+              type: string
+            message:
+              description: Audit message
+              type: string
+            name:
+              description: Audit name
+              type: string
+            severity:
+              description: Audit severity (default:notice).
+              enum:
+              - notice
+              - alert
+              type: string
+            source:
+              description: Audit source
+              type: string
+        limit:
+          description: Get Audit log limit
+          type: integer
+        offset:
+          description: Get Audit log offset
+          type: integer
+        total:
+          description: Total Audit log count
+          type: integer
+    AuditSetting:
+      properties:
+        data:
+          properties:
+            desiredDiskCacheSizeMB:
+              default: 100
+              minimum: 1
+              type: integer
+            enableTimeToLiveSec:
+              default: false
+              type: boolean
+            reachThresholdPolicy:
+              description: default to rotate
+              enum:
+              - rotate
+              type: string
+            timeToLiveSec:
+              default: 86400
+              description: unlimit if value <= 0
+              minimum: 60
+              type: integer
+    AvailableUpdate:
+      properties:
+        category:
+          example: base-package
+          type: string
+        currentVersion:
+          example: 1.0.0
+          type: string
+        name:
+          example: moxa-aig-502-tpe
+          type: string
+        newVersion:
+          example: 1.1.0
+          type: string
+        size:
+          description: package size with unit KB
+          example: 10000
+          format: int32
+          type: integer
+      type: object
+    AzureIoTEdgeConfiguration:
+      properties:
+        downstreamCerts:
+          properties:
+            caCertFile:
+              description: device ca certificate file name
+              type: string
+            caPkFile:
+              description: device ca private key file name
+              type: string
+            certificateInfo:
+              properties:
+                issuer:
+                  readOnly: true
+                  type: string
+                notAfter:
+                  readOnly: true
+                  type: string
+                subject:
+                  properties:
+                    cn:
+                      readOnly: true
+                      type: string
+                  type: object
+              readOnly: true
+              type: object
+            mode:
+              default: default
+              description: The identity certication mode of the iotedge.
+              enum:
+              - default
+              - user
+              - moxa
+              type: string
+            trustedCaFile:
+              description: a file containing all the trusted CA
+              type: string
+        iotedge:
+          description: IoT Edge runtime information
+          properties:
+            match:
+              readOnly: true
+              type: boolean
+            modules:
+              items:
+                description: IoT Edge modules runtime information
+                properties:
+                  config:
+                    description: docker image URL
+                    readOnly: true
+                    type: string
+                  description:
+                    readOnly: true
+                    type: string
+                  match:
+                    readOnly: true
+                    type: boolean
+                  name:
+                    description: module name
+                    readOnly: true
+                    type: string
+                  status:
+                    description: One of created, restarting, running, removing, paused,
+                      exited, or dead
+                    readOnly: true
+                    type: string
+                  suggestion:
+                    readOnly: true
+                    type: string
+                type: object
+              type: array
+            since:
+              example: Mon 2016-10-07 09:49:16 CST
+              readOnly: true
+              type: string
+            status:
+              enum:
+              - resetting
+              - running
+              - dead
+              - exited
+              - waiting
+              readOnly: true
+              type: string
+            suggestion:
+              readOnly: true
+              type: string
+            version:
+              readOnly: true
+              type: string
+        provisioning:
+          properties:
+            connectionString:
+              description: for source:manual
+              maxLength: 1024
+              minLength: 1
+              type: string
+            defenderEnable:
+              default: false
+              type: boolean
+            enable:
+              default: false
+              type: boolean
+            endorsementKey:
+              description: for source:dps,method:tpm;
+              readOnly: true
+              type: string
+            globalEndpoint:
+              default: https://global.azure-devices-provisioning.net
+              description: DPS url
+              type: string
+            identityCert:
+              description: for source:dps,method:x509
+              maxLength: 1024
+              minLength: 1
+              type: string
+            identityPk:
+              description: for source:dps,method:x509
+              maxLength: 1024
+              minLength: 1
+              type: string
+            method:
+              default: tpm
+              description: The identity provisioning mode of the iotedge.
+              enum:
+              - tpm
+              - symmetricKey
+              - x509
+              type: string
+            registrationId:
+              description: |
+                Use only lowercase alphanumeric and dash ('-') characters. For example, symm-key-device-007
+              maxLength: 128
+              minLength: 1
+              type: string
+            scopeId:
+              description: for source:dps; Value of a specific DPS instance's ID scope
+              maxLength: 128
+              minLength: 1
+              type: string
+            source:
+              default: manual
+              description: The identity provisioning mode of the iotedge.
+              enum:
+              - manual
+              - dps
+              type: string
+            supportTwin:
+              type: boolean
+            symmetricKey:
+              description: for source:dps,method:symmetricKey
+              maxLength: 256
+              minLength: 1
+              type: string
+      title: Azure IoT Edge configuration
+    Capability:
+      properties:
+        baudRate:
+          properties:
+            range:
+              description: list supported baud rate.
+              example:
+              - 300
+              - 600
+              - 1200
+              - 1800
+              - 2400
+              - 4800
+              - 9600
+              - 19200
+              - 38400
+              - 57600
+              - 115200
+              - 230400
+              - 460800
+              - 921600
+              items:
+                type: integer
+              readOnly: true
+              type: array
+            special:
+              default: false
+              description: support moxa special baud rate
+              type: boolean
+          type: object
+        dataBits:
+          description: list supported data bits.
+          example:
+          - 5
+          - 6
+          - 7
+          - 8
+          items:
+            type: integer
+          readOnly: true
+          type: array
+        flowControl:
+          description: list supported flow controls.
+          example:
+          - none
+          - hardware
+          - software
+          items:
+            type: string
+          readOnly: true
+          type: array
+        mode:
+          description: list supported modes.
+          example:
+          - rs232
+          - rs422
+          - rs4852w
+          - rs4854w
+          items:
+            type: string
+          readOnly: true
+          type: array
+        parities:
+          description: list supported parities.
+          example:
+          - none
+          - odd
+          - even
+          - space
+          - mark
+          items:
+            type: string
+          readOnly: true
+          type: array
+        stopBits:
+          description: list supported stop bits.
+          example:
+          - 1
+          - 2
+          - 1.5
+          items:
+            type: number
+          readOnly: true
+          type: array
+      title: Serial hardware capability
+    Cellular:
+      properties:
+        data:
+          allOf:
+          - $ref: '#/components/schemas/RuntimeInfo'
+          - $ref: '#/components/schemas/ConfigurationRequest'
+      title: cellular interface runtime and configuration info.
+    CellularKeepalive:
+      properties:
+        enable:
+          description: Enable/disable Cellular connection keep-alive by ping.
+          type: boolean
+        intervalSec:
+          default: 60
+          description: Check alive interval.
+          example: 60
+          maximum: 86400
+          minimum: 10
+          type: integer
+        targetHost:
+          default: 8.8.8.8
+          description: IPv4 address or domain name to ping.
+          example: 8.8.8.8
+          maxLength: 253
+          minLength: 2
+          type: string
+      required:
+      - enable
+      title: Keepalive Settings
+      type: object
+    CellularProfile:
+      properties:
+        name:
+          description: Alias name for the profile.
+          example: TWM
+          maxLength: 100
+          minLength: 1
+          type: string
+        pdpContext:
+          description: PDP context data for dialing up to Cellular Network.
+          properties:
+            apn:
+              default: internet
+              description: Edit APN of the specified PDP context.
+              example: internet
+              maxLength: 100
+              minLength: 1
+              pattern: (?=^.{1,100}$)(?:^(?!\.|-)[a-zA-Z0-9\-]{0,62}[a-zA-Z0-9])(?:\.(?!\.|\-)[a-zA-Z0-9\-]{0,62}[a-zA-Z0-9])*$
+              type: string
+            auth:
+              description: The negotiated authentication.
+              properties:
+                password:
+                  description: Password for PAP and/or CHAP.
+                  example: ""
+                  maxLength: 255
+                  minLength: 0
+                  type: string
+                username:
+                  description: Username for PAP and/or CHAP.
+                  example: ""
+                  maxLength: 255
+                  minLength: 0
+                  type: string
+              required:
+              - protocol
+              type: object
+            type:
+              default: ipv4
+              description: Indicate the PDP type to use.
+              enum:
+              - ipv4
+              - ipv6
+              - ipv4v6
+              example: ipv4
+              type: string
+          type: object
+        pinCode:
+          description: PIN code of SIM card. Takes no effect when SIM card PIN weren't
+            not set.
+          example: "0000"
+          maxLength: 8
+          minLength: 0
+          pattern: ^(|[0-9]{4,8})$
+          type: string
+        simSlot:
+          description: |
+            Profile Simslot.
+            - sim:\<sim-slot\>
+            pattern: >-
+              ^([1-2])$
+          example:
+          - sim:1
+          type: string
+      required:
+      - name
+      - pdpContext
+      title: Cellular Profile
+      type: object
+    Cellulars:
+      properties:
+        count:
+          description: Array length.
+          example: 1
+          type: integer
+        data:
+          items:
+            allOf:
+            - $ref: '#/components/schemas/RuntimeInfo'
+            - $ref: '#/components/schemas/ConfigurationRequest'
+          type: array
+      title: All cellulars interface runtime and configuration info.
+    ConfigurationRequest:
+      properties:
+        enable:
+          description: Enable Cellular Networking.
+          type: boolean
+        id:
+          description: Interface id.
+          example: 1
+          type: integer
+        keepalive:
+          $ref: '#/components/schemas/CellularKeepalive'
+        profileTimeout:
+          description: Retry timeout in seconds for switch profiles.
+          example: 300
+          maximum: 3600
+          minimum: 60
+          type: integer
+        profiles:
+          description: Profiles for redundancy
+          items:
+            $ref: '#/components/schemas/CellularProfile'
+          type: array
+      required:
+      - enable
+      - profileTimeout
+      - profiles
+      - keepalive
+    ConfigurationResponse:
+      allOf:
+      - properties:
+          displayName:
+            description: Interface display name.
+            example: Cellular1
+            readOnly: true
+            type: string
+        type: object
+      - $ref: '#/components/schemas/ConfigurationRequest'
+    DeviceProperties:
+      example:
+        device:
+          general:
+          - desiredPath: general
+            reportedPath: general
+          wan:
+          - desiredPath: wan
+            reportedPath: wan
+      properties:
+        $origin:
+          properties:
+            $resource:
+              items:
+                properties:
+                  desiredPath:
+                    description: json path of desired property.
+                    type: string
+                  reportedPath:
+                    description: json path of reported property.
+                    type: string
+                  source:
+                    description: json path of property in resource; empty == "."(complete
+                      json object/array)
+                    type: string
+                required:
+                - reportedPath
+                - desiredPath
+                type: object
+              type: array
+          type: object
+      type: object
+    EthernetDhcp:
+      properties:
+        enable:
+          description: Set interface UP.
+          type: boolean
+        enableDhcp:
+          description: Enable (`true`) the dhcp client.
+          type: boolean
+        id:
+          description: Identifier of an Ethernet interface.
+          minimum: 1
+          type: integer
+        wan:
+          description: Define the interface type is WAN (`true`) or LAN (`false`)
+          type: boolean
+      required:
+      - enable
+      - enableDhcp
+      - wan
+      title: Ethernet setting for dynamic ip.
+    EthernetInformation:
+      properties:
+        data:
+          $ref: '#/components/schemas/EthernetItem'
+      title: Ethernet interface configuration
+    EthernetItem:
+      properties:
+        displayName:
+          description: Interface display name.
+          example: LAN1
+          readOnly: true
+          type: string
+        dns:
+          description: Interface dns.
+          items:
+            example:
+            - 10.128.8.5
+            - 10.128.8.8
+            pattern: ^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$
+            type: string
+          type: array
+        enable:
+          description: Enable/disable the interface.(enable=true doesn’t mean the
+            interface is trying to connect if the interface belongs to Wi-Fi Client
+            which the TCP/IP layer 2 behavior controlled by the other endpoints.)
+          example: true
+          type: boolean
+        enableDhcp:
+          description: Enable/disable dhcp.
+          example: true
+          type: boolean
+        gateway:
+          description: Interface gateway.
+          example: 192.168.3.254
+          pattern: ^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$
+          type: string
+        id:
+          description: Interface id.
+          example: 1
+          readOnly: true
+          type: integer
+        ip:
+          description: Interface ip.
+          example: 192.168.3.100
+          pattern: ^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$
+          type: string
+        linkSpeed:
+          description: link speed.
+          example: 1000
+          readOnly: true
+          type: integer
+        mac:
+          description: Interface mac.
+          example: 00:90:e8:70:a9:74
+          readOnly: true
+          type: string
+        name:
+          description: Interface name.
+          example: eth0
+          readOnly: true
+          type: string
+        netmask:
+          description: Interface netmask.
+          example: 255.255.255.0
+          pattern: ^(254|252|248|240|224|192|128)\.0\.0\.0|255\.(254|252|248|240|224|192|128|0)\.0\.0|255\.255\.(254|252|248|240|224|192|128|0)\.0|255\.255\.255\.(254|252|248|240|224|192|128|0)
+          type: string
+        status:
+          description: Interface current status.
+          enum:
+          - connected
+          - disconnected
+          - unavailable
+          - disabled
+          example: connected
+          readOnly: true
+          type: string
+        wan:
+          description: Enable/disable wan.
+          example: true
+          type: boolean
+      title: Ethernet configuration
+    EthernetStaticIP:
+      properties:
+        dns:
+          description: |
+            The Domain Name System (DNS) is a hierarchical distributed naming
+            system for computers, services, or any resource connected to the
+            Internet or a private network.
+          items:
+            pattern: ^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$
+            type: string
+          type: array
+        enable:
+          description: Set interface UP.
+          type: boolean
+        enableDhcp:
+          description: Using the static IP (`false`).
+          type: boolean
+        gateway:
+          description: Gateway is a router or a proxy server that routes between networks.
+          pattern: ^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$
+          type: string
+        id:
+          description: Identifier of an Ethernet interface.
+          minimum: 1
+          type: integer
+        ip:
+          description: IP address for the Ethernet interface.
+          pattern: ^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$
+          type: string
+        netmask:
+          description: Interface netmask.
+          pattern: ^(?:(?:254|252|248|240|224|192|128)\.0\.0\.0|255\.(?:254|252|248|240|224|192|128|0)\.0\.0|255\.255\.(?:254|252|248|240|224|192|128|0)\.0|255\.255\.255\.(?:254|252|248|240|224|192|128|0))$
+          type: string
+        wan:
+          description: Define the interface type is WAN (`true`) or LAN (`false`)
+          type: boolean
+      required:
+      - enable
+      - ip
+      - netmask
+      - enableDhcp
+      - wan
+      title: Ethernet setting for static ip.
+    GPSCapability:
+      properties:
+        interface:
+          description: list supported gps interfaces.
+          example:
+          - GPS1
+          items:
+            type: string
+          readOnly: true
+          type: array
+      title: Gps capability
+    GeneralInformation:
+      properties:
+        biosVersion:
+          description: device BIOS/Bootloader version.
+          example: 1.0.0S06
+          maxLength: 255
+          minLength: 3
+          readOnly: true
+          type: string
+        cpu:
+          description: device cpu information.
+          example: ARMv7 Processor rev 5 (v7l)
+          maxLength: 255
+          minLength: 1
+          readOnly: true
+          type: string
+        description:
+          description: device description.
+          example: This is My Thingspro Edge.
+          maxLength: 512
+          minLength: 0
+          type: string
+        disk:
+          description: device disk information.
+          items:
+            properties:
+              device:
+                description: disk physical device node path
+                example: /dev/root
+                maxLength: 255
+                minLength: 1
+                readOnly: true
+                type: string
+              free:
+                description: 'disk Free size (unit: byte)'
+                example: 4857821184
+                maximum: 1.8446744073709552e+19
+                minimum: 1
+                readOnly: true
+                type: integer
+              mount:
+                description: disk mount point
+                example: /
+                maxLength: 255
+                minLength: 1
+                readOnly: true
+                type: string
+              name:
+                description: disk name.
+                example: System
+                maxLength: 255
+                minLength: 1
+                readOnly: true
+                type: string
+              percent:
+                description: Percent of used size
+                example: 27.019343397064695
+                maximum: 100
+                minimum: 0
+                readOnly: true
+                type: number
+              tags:
+                properties:
+                  free:
+                    example: systemDiskFree
+                    readOnly: true
+                    type: string
+                  percent:
+                    example: systemDiskPercent
+                    readOnly: true
+                    type: string
+                  used:
+                    example: systemDiskUsed
+                    readOnly: true
+                    type: string
+                readOnly: true
+                type: object
+              total:
+                description: 'disk Total size (unit: byte)'
+                example: 6948147200
+                maximum: 1.8446744073709552e+19
+                minimum: 1
+                readOnly: true
+                type: integer
+              used:
+                description: 'disk Used size (unit: byte)'
+                example: 1798492160
+                maximum: 1.8446744073709552e+19
+                minimum: 1
+                readOnly: true
+                type: integer
+            readOnly: true
+            type: object
+          readOnly: true
+          type: array
+        firmwareVersion:
+          description: device firmware version.
+          example: "1.0"
+          maxLength: 255
+          minLength: 3
+          readOnly: true
+          type: string
+        hostName:
+          description: device hostname. <br> - Hostname must be between 1 and 64 octets
+            inclusive.<br> - Each label in the hostname (component separated by ".")
+            must be between 1 and 63 octets inclusive. <br> - Each label must start
+            with an ASCII alphabet character (a-z, A-Z), end with an ASCII alphanumeric
+            character (a-z, A-Z, 0-9), and must contain only ASCII alphanumeric characters
+            or hyphens (a-z, A-Z, 0-9, "-").
+          example: Moxa
+          maxLength: 64
+          minLength: 1
+          pattern: ^[a-zA-Z]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*$
+          type: string
+        lastBootTime:
+          description: |
+            device last boot time. (format in RFC 3339)
+            ('2020-06-04T5:45:44Z or '2020-06-04T13:45:44.000+08:00')
+          example: "2020-06-04T13:45:44+08:00"
+          maxLength: 29
+          minLength: 20
+          readOnly: true
+          type: string
+        memorySize:
+          description: device memory size(unit:byte).
+          example: 2116034560
+          maximum: 2147483647
+          minimum: 1
+          readOnly: true
+          type: integer
+        modelName:
+          description: Model name of device.
+          example: UC-8100A-ME-T-LX
+          maxLength: 255
+          minLength: 1
+          readOnly: true
+          type: string
+        serialNumber:
+          description: Serial number of device.
+          example: IMOXA1234567
+          maxLength: 12
+          minLength: 12
+          readOnly: true
+          type: string
+        softwareVersion:
+          description: Product package version.
+          example: 2.0.0-1600
+          maxLength: 255
+          minLength: 5
+          readOnly: true
+          type: string
+      title: System general configuration
+    GpsInformation:
+      properties:
+        data:
+          $ref: '#/components/schemas/GpsItem'
+      title: GPS interface configuration
+    GpsItem:
+      properties:
+        capabilities:
+          $ref: '#/components/schemas/GPSCapability'
+        interface:
+          description: Device path.
+          example: GPS1
+          type: string
+        location:
+          $ref: '#/components/schemas/GpsLocation'
+        mode:
+          description: gps mode.
+          enum:
+          - manual
+          - auto
+          example: null
+          type: string
+      title: GPS Information
+    GpsLocation:
+      description: Location information, with `latitude` and `longitude` data.
+      properties:
+        lat:
+          default: 0
+          description: latitude. The field is required for `manual` mode.
+          example: 23.5
+          format: float
+          maximum: 90
+          minimum: -90
+          type: number
+        lng:
+          default: 0
+          description: longitude. The field is required for `manual` mode.
+          example: 121.2
+          format: float
+          maximum: 180
+          minimum: -180
+          type: number
+      required:
+      - lat
+      - lng
+      type: object
+    GpsSetMode:
+      properties:
+        interface:
+          description: GPS interface setting from capability. The field is required
+            for `auto` mode.
+          example: GPS1
+          type: string
+        location:
+          $ref: '#/components/schemas/GpsLocation'
+        mode:
+          description: gps mode.
+          enum:
+          - manual
+          - auto
+          example: manual
+          type: string
+      required:
+      - mode
+      - interface
+      title: Set GPS manual mode.
+    InternetCheckAlive_PostRsp:
+      properties:
+        status:
+          description: status of internet check alive
+          enum:
+          - NotConnected
+          - NoInternetAccess
+          - ConnectedToInternet
+          type: string
+      title: Response of internet check alive
+    InternetCheckAliveConfig:
+      properties:
+        enable:
+          default: false
+          description: enable/disable internet check alive service
+          type: boolean
+        interval:
+          default: 60
+          description: interval in seconds for internet check alive
+          maximum: 86400
+          minimum: 10
+          type: integer
+        retry:
+          default: 3
+          description: retry times for internet check alive
+          maximum: 10
+          minimum: 1
+          type: integer
+        target:
+          default: google.com
+          description: target for internet check alive
+          maxLength: 255
+          minLength: 1
+          type: string
+        timeout:
+          default: 5
+          description: each check timeout in seconds for internet check alive
+          maximum: 60
+          minimum: 1
+          type: integer
+      title: Response configuration of internet check alive
+    MessagePolicy:
+      example:
+        customSamplingRate: false
+        description: my message group
+        enable: true
+        id: 1
+        minPublishInterval: 0
+        onChange: false
+        outputTopic: sample
+        pollingInterval: 0
+        properties: []
+        samplingMode: allValues
+        sendOutThreshold:
+          mode: byTime
+          time: 60
+        tags:
+          modbus:
+            myDevice1:
+            - di0
+            - di1
+      properties:
+        customSamplingRate:
+          default: false
+          description: enable will use the pollingInterval that user input.
+          type: boolean
+        description:
+          maxLength: 1024
+          type: string
+        enable:
+          type: boolean
+        format:
+          default: ""
+          description: |
+            jq filter string, use to change message format.
+            - empty means use default message format: {tags:{(.prvdName):{(.srcName):{(.tagName):{values:[{updateTimeStamp:(.ts/1000|todateiso8601),value:.dataValue}]}}}}}
+          maxLength: 4096
+          minLength: 0
+          type: string
+        id:
+          readOnly: true
+          type: integer
+        minPublishInterval:
+          default: 0
+          description: a fixed interval between the two publish. unit:second
+          maximum: 60
+          minimum: 0
+          type: integer
+        onChange:
+          description: drop data if same with latest when enable onChange.
+          readOnly: true
+          type: boolean
+        outputTopic:
+          default: sample
+          minLength: 1
+          type: string
+        pollingInterval:
+          default: 0
+          description: unit:second, 0 means subscribe mode
+          maxLength: 86400
+          minLength: 0
+          type: integer
+        properties:
+          items:
+            properties:
+              key:
+                minLength: 1
+                type: string
+              value:
+                minLength: 1
+                type: string
+            required:
+            - key
+            - value
+            type: object
+          type: array
+        samplingMode:
+          default: allChangedValues
+          enum:
+          - allValues
+          - latestValues
+          - allChangedValues
+          - latestChangedValues
+          type: string
+        sendOutThreshold:
+          properties:
+            mode:
+              default: byTime
+              enum:
+              - byTime
+              - bySize
+              - immediately
+              type: string
+            size:
+              default: 4096
+              description: unit:byte
+              maximum: 262144
+              minimum: 0
+              type: integer
+            sizeIdleTimer:
+              properties:
+                enable:
+                  default: true
+                  type: boolean
+                time:
+                  default: 60
+                  description: unit:second
+                  maximum: 86400
+                  minimum: 0
+                  type: integer
+              type: object
+            time:
+              default: 60
+              description: unit:second
+              maximum: 86400
+              minimum: 0
+              type: integer
+          type: object
+        tags:
+          properties:
+            moduleName:
+              properties:
+                sourceName:
+                  items:
+                    description: tag name
+                    maxLength: 255
+                    minLength: 1
+                    type: string
+                  type: array
+              type: object
+          type: object
+      required:
+      - id
+      - enable
+      - tags
+      - sendOutThreshold
+      - outputTopic
+      title: Message upload group configuration
+    PasswordPolicy:
+      properties:
+        atLeastOneDigit:
+          default: true
+          description: password must be at least one digit
+          type: boolean
+        atLeastOneSpecial:
+          default: true
+          description: password must be at least one special chararacter
+          type: boolean
+        lengthMax:
+          default: 256
+          description: password maximum length
+          maximum: 256
+          type: integer
+        lengthMin:
+          default: 8
+          description: password minimum length
+          minimum: 8
+          type: integer
+        mixedUpperLowerLetters:
+          default: true
+          description: password must be mixed upper and lower case
+          type: boolean
+    Permission:
+      properties:
+        description:
+          description: Description of permission.
+          type: string
+        id:
+          type: string
+        name:
+          description: Name of permission.
+          type: string
+    PostAuditLog:
+      properties:
+        data:
+          properties:
+            auditId:
+              description: Audit ID
+              type: string
+            message:
+              description: Audit message
+              type: string
+            source:
+              description: Audit source
+              type: string
+    Role:
+      properties:
+        description:
+          type: string
+        id:
+          type: integer
+        name:
+          type: string
+        permissions:
+          items:
+            description: ID of permission
+            type: string
+          type: array
+        users:
+          items:
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+    Role-simple:
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    RouteInformation:
+      properties:
+        default:
+          description: default route display name.
+          readOnly: true
+          type: string
+        priorityList:
+          items:
+            maxLength: 15
+            minLength: 2
+            pattern: '[A-Za-z0-9_-]+'
+            type: string
+          type: array
+      title: Device route configuration
+    RuntimeInfo:
+      properties:
+        CurrentProfileName:
+          description: Current used profile name.
+          example: Profile-1
+          readOnly: true
+          type: string
+        capabilities:
+          properties:
+            sim:
+              description: Numbers of SIM slots provided
+              example: 1
+              readOnly: true
+              type: integer
+          readOnly: true
+          title: Cellular Capabilities
+        cellId:
+          description: Cell ID.
+          example: 6326
+          readOnly: true
+          type: string
+        displayName:
+          description: Interface display name.
+          example: Cellular1
+          readOnly: true
+          type: string
+        dns:
+          description: A list of DNS IP addresses. `[]` when not connected.
+          example: []
+          items:
+            type: string
+          readOnly: true
+          type: array
+        gateway:
+          description: Gateway IP address. `""` when not connected.
+          example: ""
+          readOnly: true
+          type: string
+        iccId:
+          description: ICC ID of SIM card.
+          example: 8.988697141073017e+19
+          readOnly: true
+          type: string
+        imei:
+          description: IMEI of cellular module.
+          example: 359841080332053
+          readOnly: true
+          type: string
+        imsi:
+          description: IMSI of SIM card.
+          example: 466977300046885
+          readOnly: true
+          type: string
+        ip:
+          description: IP address. `""` when not connected.
+          example: ""
+          readOnly: true
+          type: string
+        lac:
+          description: Location area code.
+          example: 11114
+          readOnly: true
+          type: string
+        mac:
+          description: The identical MAC address.
+          example: "00:00:11:12:13:14"
+          readOnly: true
+          type: string
+        mode:
+          description: Given cellular connection mode. Could be one of `"umts"`, `"lte"`.
+          example: lte
+          readOnly: true
+          type: string
+        name:
+          description: Interface name.
+          example: wwan0
+          readOnly: true
+          type: string
+        netmask:
+          description: Subnet mask. `""` when not connected.
+          example: ""
+          readOnly: true
+          type: string
+        operatorName:
+          description: Indicate current operator name if exist.
+          example: TWM
+          readOnly: true
+          type: string
+        pinRetryRemain:
+          description: PIN Retry remaining.
+          example: 3
+          readOnly: true
+          type: integer
+        signal:
+          description: Cellular RF signal strength, include RSSI and RSRP.
+          properties:
+            rsrp:
+              description: |
+                Reference Signal Received Quality, a C/I type of measurement and
+                it indicates the quality of the received reference signal
+              type: integer
+            rssi:
+              description: Cellular RF signal strength, in `dbm`. Value `0` indicates
+                no SIM card found.
+              example: -67
+              type: integer
+          readOnly: true
+          type: object
+        signalStrength:
+          description: |
+            Cellular RF signal strength.
+            - 0: no signal
+            - 1: poor
+            - 2: fair
+            - 3: good
+            - 4: excellent
+          enum:
+          - 0
+          - 1
+          - 2
+          - 3
+          - 4
+          readOnly: true
+          type: integer
+        status:
+          description: |
+            Indicate current status of cellular connection.
+            - initializing: get module and SIM card info, unlock SIM card if necessary
+            - sim_pin_locked: SIM card is locked with a PIN code
+            - connecting: during connect state
+            - connected: connect success with keepalive success or success with keepalive disabled
+            - radio_power_off: the modem radio power is off but sim power may not off
+            - radio_power_on: the modem radio power is on but idle and not registered, not searching
+            - service_searching: roaming
+            - service_attached: attached with a base station
+            - nosim: no SIM card or unknown error with SIM card status
+            - disabled: cellular service is disabled
+          enum:
+          - initializing
+          - sim_pin_locked
+          - sim_puk_locked
+          - connecting
+          - connected
+          - radio_power_off
+          - radio_power_on
+          - service_searching
+          - service_attached
+          - nosim
+          - disabled
+          example: ready
+          readOnly: true
+          type: string
+        tac:
+          description: Tracking area code (LTE).
+          example: ""
+          readOnly: true
+          type: string
+      title: Cellular Runtime Information
+    SerialConfiguration:
+      properties:
+        baudRate:
+          description: baud rate
+          example: 9600
+          type: integer
+        dataBits:
+          description: data bits
+          example: 8
+          type: integer
+        device:
+          description: Device path.
+          readOnly: true
+          type: string
+        displayName:
+          description: Serial port display name.
+          example: P1
+          readOnly: true
+          type: string
+        flowControl:
+          description: flow control
+          example: software
+          type: string
+        id:
+          description: Interface id.
+          example: 1
+          type: integer
+        mode:
+          description: Serial interface mode.
+          enum:
+          - rs232
+          - rs422
+          - rs4852w
+          - rs4854w
+          example: rs232
+          type: string
+        parity:
+          description: parity
+          example: none
+          type: string
+        stopBits:
+          description: stop bits
+          example: 1
+          type: number
+      title: Serial setting.
+    SerialInformation:
+      properties:
+        data:
+          $ref: '#/components/schemas/SerialItem'
+      title: Serial interface configuration
+    SerialItem:
+      properties:
+        baudRate:
+          description: baud rate
+          example: 9600
+          type: integer
+        capabilities:
+          $ref: '#/components/schemas/Capability'
+        dataBits:
+          description: data bits
+          example: 8
+          type: integer
+        device:
+          description: Device path.
+          readOnly: true
+          type: string
+        displayName:
+          description: Serial port display name.
+          example: P1
+          readOnly: true
+          type: string
+        flowControl:
+          description: flow control
+          example: software
+          type: string
+        id:
+          description: Interface id.
+          example: 1
+          readOnly: true
+          type: integer
+        mode:
+          description: Serial interface mode.
+          enum:
+          - rs232
+          - rs422
+          - rs4852w
+          - rs4854w
+          example: rs232
+          type: string
+        parity:
+          description: parity
+          example: none
+          type: string
+        stopBits:
+          description: stop bits
+          example: 1
+          type: number
+        type:
+          description: Interface type.
+          example: serials
+          readOnly: true
+          type: string
+      title: Serial Information
+    SyslogSetting:
+      properties:
+        data:
+          properties:
+            desiredDiskCacheSizeMB:
+              type: string
+            disks:
+              description: device disk information.
+              items:
+                properties:
+                  device:
+                    description: disk physical device node path
+                    example: /dev/root
+                    maxLength: 255
+                    minLength: 1
+                    readOnly: true
+                    type: string
+                  free:
+                    description: 'disk Free size (unit: byte)'
+                    example: 4857821184
+                    maximum: 1.8446744073709552e+19
+                    minimum: 1
+                    readOnly: true
+                    type: integer
+                  mount:
+                    description: disk mount point
+                    example: /
+                    maxLength: 255
+                    minLength: 1
+                    readOnly: true
+                    type: string
+                  name:
+                    description: disk name.
+                    example: System
+                    maxLength: 255
+                    minLength: 1
+                    readOnly: true
+                    type: string
+                  percent:
+                    description: Percent of used size
+                    example: 27.019343397064695
+                    maximum: 100
+                    minimum: 0
+                    readOnly: true
+                    type: number
+                  tags:
+                    properties:
+                      free:
+                        example: ""
+                        readOnly: true
+                        type: string
+                      percent:
+                        example: ""
+                        readOnly: true
+                        type: string
+                      used:
+                        example: ""
+                        readOnly: true
+                        type: string
+                    readOnly: true
+                    type: object
+                  total:
+                    description: 'disk Total size (unit: byte)'
+                    example: 6948147200
+                    maximum: 1.8446744073709552e+19
+                    minimum: 1
+                    readOnly: true
+                    type: integer
+                  used:
+                    description: 'disk Used size (unit: byte)'
+                    example: 1798492160
+                    maximum: 1.8446744073709552e+19
+                    minimum: 1
+                    readOnly: true
+                    type: integer
+                readOnly: true
+                type: object
+              readOnly: true
+              type: array
+            enableTimeToLiveSec:
+              type: boolean
+            targetDiskName:
+              description: target storage disk name
+              type: string
+            timeToLiveSec:
+              description: unlimit if value <= 0
+              type: integer
+    Tag:
+      example:
+        access: ro
+        dataType: int32
+        dataUnit: '%'
+        duration: 1000
+        srcName: system
+        tagName: cpuUsage
+      properties:
+        access:
+          enum:
+          - ro
+          - wo
+          - rw
+          type: string
+        dataType:
+          enum:
+          - uint8
+          - uint16
+          - uint32
+          - uint64
+          - int16
+          - int32
+          - int64
+          - float32
+          - float64
+          - string
+          - boolean
+          - bytearray
+          type: string
+        dataUnit:
+          type: string
+        duration:
+          format: int32
+          type: integer
+        srcName:
+          type: string
+        tagName:
+          type: string
+      type: object
+    TimeInformation:
+      properties:
+        lastUpdateTime:
+          description: |
+            Last update time with RFC3339 format after time settings.
+            '-' means not updated yet since NTP updated and enabled.
+          example: "2015-03-26T16:00:00+08:00"
+          readOnly: true
+          type: string
+        ntp:
+          properties:
+            enable:
+              description: enable/disable sync time from time server
+              example: false
+              type: boolean
+            interval:
+              description: ntpd update interval
+              example: 7200
+              maximum: 2592000
+              minimum: 60
+              type: integer
+            server:
+              description: ntp server url
+              example: pool.ntp.org
+              maxLength: 253
+              minLength: 2
+              pattern: (?=^.{2,253}$)(?:^(?!\.|-)[a-zA-Z0-9\-]{0,62}[a-zA-Z0-9])(?:\.(?!\.|\-)[a-zA-Z0-9\-]{0,62}[a-zA-Z0-9])*$
+              type: string
+            source:
+              default: timeserver
+              description: time sync source
+              enum:
+              - timeserver
+              type: string
+          type: object
+        time:
+          description: 'Current system time (format: RFC3339).'
+          example: "2015-03-26T16:27:48+08:00"
+          maxLength: 35
+          minLength: 20
+          type: string
+        timezone:
+          description: device timezone.
+          example: Asia/Taipei
+          maxLength: 64
+          minLength: 1
+          type: string
+      title: System time configuration
+    TimezoneInfo:
+      description: Timezone information
+      example:
+        data:
+          iso3166:
+          - cca2: AD
+            name: Andorra
+          - cca2: AE
+            name: United Arab Emirates
+          - cca2: AF
+            name: Afghanistan
+          zone:
+          - cca2: AD
+            name: Europe/Andorra
+            offset: "+0100"
+          - cca2: AE
+            name: Asia/Dubai
+            offset: "+0400"
+          - cca2: AF
+            name: Asia/Kabul
+            offset: "+0430"
+      properties:
+        iso3166:
+          description: ISO 3166 alpha-2 country codes
+          items:
+            description: ISO 3166 alpha-2 country code and country name
+            properties:
+              cca2:
+                description: ISO 3166 alpha-2 country code
+                pattern: '[A-Z]{2}'
+                type: string
+              name:
+                description: The usual English name for the coded region
+                type: string
+            required:
+            - cca2
+            - name
+            type: object
+          readOnly: true
+          type: array
+        zone:
+          description: TZ zone list with cca2 and TZ
+          items:
+            description: ISO 3166 alpha-2 country code and zone name
+            properties:
+              cca2:
+                description: ISO 3166 alpha-2 country code
+                pattern: '[A-Z]{2}'
+                type: string
+              name:
+                description: zone name
+                type: string
+              offset:
+                description: zone offset (format should be "+0800", etc)
+                type: string
+            required:
+            - cca2
+            - name
+            - offset
+            type: object
+          readOnly: true
+          type: array
+      required:
+      - zone
+      - iso3166
+      type: object
+    UpdateRecord:
+      properties:
+        message:
+          example: Success
+          type: string
+        name:
+          example: moxa-aig-502-tpe
+          type: string
+        size:
+          example: 10000
+          format: int32
+          type: integer
+        status:
+          enum:
+          - success
+          - failure
+          example: success
+          type: string
+        time:
+          example: "2022-10-03T08:18:07Z"
+          type: string
+        type:
+          example: package
+          type: string
+        version:
+          example: 1.1.0
+          type: string
+      type: object
+    UpdateSettings:
+      properties:
+        allowOverCellular:
+          example: false
+          type: boolean
+        allowUpdate:
+          example: true
+          type: boolean
+        autoScan:
+          example: false
+          type: boolean
+        autoScanExpression:
+          description: https://crontab.guru/
+          example: 0 3 * * 1,2,3
+          pattern: /(@(annually|yearly|monthly|weekly|daily|hourly|reboot))|(@every
+            (\d+(ns|us|µs|ms|s|m|h))+)|((((\d+,)+\d+|(\d+(\/|-)\d+)|\d+|\*) ?){5,7})/
+          type: string
+        snapshotBeforeUpdate:
+          example: true
+          type: boolean
+      type: object
+    WANInformation:
+      properties:
+        displayName:
+          description: Interface display name.
+          type: string
+        dns:
+          description: |
+            The Domain Name System (DNS) is a hierarchical distributed naming
+            system for computers, services, or any resource connected to the
+            Internet or a private network.
+          items:
+            type: string
+          type: array
+        gateway:
+          description: Gateway is a router or a proxy server that routes between networks.
+          type: string
+        ip:
+          description: IP address for the Ethernet interface.
+          type: string
+        name:
+          description: Interface name.
+          type: string
+        netmask:
+          description: Interface netmask.
+          type: string
+      title: Current WAN information
+    auth-lock-config:
+      properties:
+        enable:
+          type: boolean
+        failTimes:
+          type: number
+        failWindow:
+          type: number
+        lockWindow:
+          type: number
+      required:
+      - enable
+      - failWindow
+      - failTimes
+      - lockWindow
+    auth-lock-list:
+      items:
+        type: number
+      type: array
+    httpserverConfig:
+      properties:
+        httpEnable:
+          type: boolean
+        httpPort:
+          description: listen port for http
+          type: integer
+        httpsEnable:
+          type: boolean
+        httpsPort:
+          description: listen port for https
+          type: integer
+        ipv6Enable:
+          type: boolean
+    inbound-host-zone:
+      properties:
+        description:
+          description: rule description
+          maxLength: 255
+          minLength: 1
+          type: string
+        destinationIp:
+          default: ""
+          description: |
+            Packet destination IP of service or AIE module in IT Zone.
+              * 192.168.0.1
+          type: string
+        destinationPort:
+          description: Packet destination Port of service or AIE module in IT Zone.
+          type: string
+        gatewayPort:
+          description: |
+            External port of IT Zone for portforwarding.
+          type: string
+        id:
+          description: Inbound rule id
+          type: integer
+        name:
+          description: rule name
+          maxLength: 255
+          minLength: 1
+          type: string
+        protocol:
+          description: |
+            Rule handles the specified protocol
+          enum:
+          - tcp
+          - udp
+          type: string
+        sourceIp:
+          default: ""
+          description: |
+            Packet soruce IP. Support:
+              * 192.168.0.1
+              * 192.168.0.1/24
+              * empty string
+          type: string
+        sourcePort:
+          default: ""
+          description: |
+            Packet soruce port. Support:
+              * 502
+              * 502-505
+              * empty string
+          type: string
+      required:
+      - name
+      - protocol
+      - gatewayPort
+      title: Firewall host inbound configuration
+    inbound-it-zone:
+      properties:
+        description:
+          description: rule description
+          maxLength: 255
+          minLength: 1
+          type: string
+        destinationIp:
+          default: ""
+          description: |
+            Packet destination IP of service or AIE module in IT Zone.
+              * 192.168.0.1
+          type: string
+        destinationPort:
+          description: Packet destination Port of service or AIE module in IT Zone.
+          type: string
+        gatewayPort:
+          description: |
+            External port of IT Zone for portforwarding.
+          type: string
+        id:
+          description: Inbound rule id
+          type: integer
+        name:
+          description: rule name
+          maxLength: 255
+          minLength: 1
+          type: string
+        protocol:
+          description: |
+            Rule handles the specified protocol
+          enum:
+          - tcp
+          - udp
+          type: string
+        sourceIp:
+          default: ""
+          description: |
+            Packet soruce IP. Support:
+              * 192.168.0.1
+              * 192.168.0.1/24
+              * empty string
+          type: string
+        sourcePort:
+          default: ""
+          description: |
+            Packet soruce port. Support:
+              * 502
+              * 502-505
+              * empty string
+          type: string
+      required:
+      - name
+      - protocol
+      - gatewayPort
+      title: Firewall it-zone inbound configuration
+    outbound-it-zone:
+      properties:
+        description:
+          description: rule description
+          maxLength: 255
+          minLength: 1
+          type: string
+        destinationIp:
+          type: string
+        destinationPort:
+          type: string
+        id:
+          description: Outbound rule id
+          type: integer
+        name:
+          description: rule name
+          maxLength: 255
+          minLength: 1
+          type: string
+        protocol:
+          description: |
+            Rule handles the specified protocol
+          enum:
+          - tcp
+          - udp
+          type: string
+      required:
+      - name
+      - protocol
+      - destinationIp
+      - destinationPort
+      title: Firewall it-zone outbound configuration
+    putService:
+      properties:
+        addon:
+          description: The add-on permissions of the service.
+          items:
+            properties:
+              id:
+                description: The ID of the add-on permission.
+                type: string
+              name:
+                description: The description of the add-on permission.
+                type: string
+            type: object
+          type: array
+        displayName:
+          description: The display name of the service.
+          type: string
+        name:
+          description: The name of the service.
+          readOnly: true
+          type: string
+        required:
+          description: The required permissions of the service
+          items:
+            type: string
+          type: array
+        source:
+          description: The source that create this service.
+          readOnly: true
+          type: string
+    service:
+      properties:
+        addon:
+          description: The add-on permissions of the service.
+          items:
+            properties:
+              id:
+                description: The ID of the add-on permission.
+                type: string
+              name:
+                description: The description of the add-on permission.
+                type: string
+            type: object
+          type: array
+        displayName:
+          description: The display name of the service.
+          type: string
+        name:
+          description: The name of the service.
+          type: string
+        required:
+          description: The required permissions of the service
+          items:
+            type: string
+          type: array
+        source:
+          description: The source that create this service.
+          type: string
+      required:
+      - name
+      - source
+    session:
+      properties:
+        access:
+          type: string
+        create:
+          type: string
+        id:
+          type: number
+        userid:
+          type: number
+        username:
+          type: string
+    sessions:
+      items:
+        $ref: '#/components/schemas/session'
+      type: array
+  securitySchemes:
+    auth:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http
+    bearerAuth:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http
+tags:
+- name: users
+  x-displayName: users
+- name: password-policy
+  x-displayName: password-policy
+- name: authentication
+  x-displayName: authentication
+- name: auth lock
+  x-displayName: auth lock
+- name: sessions
+  x-displayName: sessions
+- name: general
+  x-displayName: general
+- name: time
+  x-displayName: time
+- name: reboot
+  x-displayName: reboot
+- name: configuration
+  x-displayName: configuration
+- name: provision
+  x-displayName: provision
+- name: reset-default
+  x-displayName: reset-default
+- name: system log
+  x-displayName: system log
+- name: httpserver
+  x-displayName: httpserver
+- name: Update
+  x-displayName: Update
+- name: services
+  x-displayName: services
+- name: audit log
+  x-displayName: audit log
+- name: network
+  x-displayName: network
+- name: route
+  x-displayName: route
+- name: wan
+  x-displayName: wan
+- name: ethernets
+  x-displayName: ethernets
+- name: cellulars
+  x-displayName: cellulars
+- name: host
+  x-displayName: host
+- name: it-zone inbound
+  x-displayName: it-zone inbound
+- name: it-zone outbound
+  x-displayName: it-zone outbound
+- name: gps
+  x-displayName: gps
+- name: serials
+  x-displayName: serials
+- name: azure iotedge
+  x-displayName: azure iotedge
+x-tagGroups:
+- name: users.openapi
+  tags:
+  - users
+  - password-policy
+  - authentication
+  - auth lock
+  - sessions
+- name: device.openapi
+  tags:
+  - general
+  - time
+- name: system.openapi
+  tags:
+  - reboot
+  - configuration
+  - provision
+  - reset-default
+  - system log
+- name: system.httpserver.openapi
+  tags:
+  - httpserver
+- name: system.update.openapi
+  tags:
+  - Update
+- name: services.openapi
+  tags:
+  - services
+- name: audit.openapi
+  tags:
+  - audit log
+- name: device.network
+  tags:
+  - network
+- name: device.route.openapi
+  tags:
+  - route
+  - wan
+- name: device.ethernet.openapi
+  tags:
+  - ethernets
+- name: device.cellular.openapi
+  tags:
+  - cellulars
+- name: device.firewall.openapi
+  tags:
+  - host
+  - it-zone inbound
+  - it-zone outbound
+- name: device.gps.openapi
+  tags:
+  - gps
+- name: device.serials.openapi
+  tags:
+  - serials
+- name: azureiotedge.openapi
+  tags:
+  - azure iotedge

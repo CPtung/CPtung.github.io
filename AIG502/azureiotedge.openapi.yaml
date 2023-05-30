@@ -1,0 +1,800 @@
+openapi: 3.0.0
+info:
+  title: ThingsPro Services Management APIs
+  version: 0.0.1
+servers:
+  - url: https://{ip}:{port}/api/v1
+    variables:
+      ip:
+        default: 127.0.0.1
+        description: HTTPs Server IP of Device
+      port:
+        default: '8443'
+        description: HTTPs Server Port of Device
+security:
+  - auth: []
+paths:
+  /azure-iotedge:
+    get:
+      description: Get azure iotedge configuration.
+      tags:
+        - azure iotedge
+      responses:
+        '200':
+          description: Azure iotedge configuration.
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AzureIoTEdgeConfiguration'
+    patch:
+      description: Update azure iotedge configuration.
+      tags:
+        - azure iotedge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AzureIoTEdgeConfiguration'
+            examples:
+              enable-service:
+                value:
+                  provisioning:
+                    enable: true
+              enable-defender:
+                value:
+                  provisioning:
+                    enable: true
+                    defenderEnable: true
+              provisioning-manual:
+                value:
+                  provisioning:
+                    source: manual
+                    connectionString: '[YOUR CONNECTION STRING]'
+              provisioning-dps-tpm:
+                value:
+                  provisioning:
+                    source: dps
+                    method: tpm
+                    globalEndpoint: https://global.azure-devices-provisioning.net
+                    registrationId: '[registration ID]'
+                    scopeId: '[DEVICE SCOPE ID]'
+              provisioning-dps-symmetricKey:
+                value:
+                  provisioning:
+                    source: dps
+                    method: symmetricKey
+                    globalEndpoint: https://global.azure-devices-provisioning.net
+                    registrationId: '[registration ID]'
+                    scopeId: '[DEVICE SCOPE ID]'
+                    symmetricKey: '[symmetric Key]'
+              downstreamCerts-default:
+                value:
+                  downstreamCerts:
+                    mode: default
+              downstreamCerts-moxa:
+                value:
+                  downstreamCerts:
+                    mode: moxa
+      responses:
+        '200':
+          description: azure iotedge configuration
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AzureIoTEdgeConfiguration'
+  /azure-iotedge/reset:
+    put:
+      description: Reset AIE APP(include iotedge runtime) cache and configuration.
+      tags:
+        - azure iotedge
+      responses:
+        '202':
+          description: restart azure iotedge service success
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AzureIoTEdgeConfiguration'
+                example:
+                  data:
+                    iotedge:
+                      status: resetting
+        '400':
+          description: reset failed
+          content:
+            application/json:
+              schema:
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: reset iotedge failed
+  /azure-iotedge/restart:
+    put:
+      description: Control azure iotedge service.
+      tags:
+        - azure iotedge
+      responses:
+        '200':
+          description: restart azure iotedge service success
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AzureIoTEdgeConfiguration'
+        '400':
+          description: restart azure iotedge service failed
+          content:
+            application/json:
+              schema:
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: restart iotedge failed
+  /azure-iotedge/modules/{name}/restart:
+    put:
+      description: Restart azure module.
+      tags:
+        - azure iotedge
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+            enum:
+              - restart
+          description: control action.
+      responses:
+        '200':
+          description: Restart azure iotedge modules success
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    type: string
+                example:
+                  data: edgeAgent enable task is accepted
+        '400':
+          description: Restart azure iotedge service/modules failed
+          content:
+            application/json:
+              schema:
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: stop module is not allowed
+  /azure-iotedge/certificates:
+    get:
+      description: Export user self generate downstream certificates.
+      tags:
+        - azure iotedge
+      responses:
+        '200':
+          description: downstream certificate
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    type: string
+                    example: |
+
+                      -----BEGIN CERTIFICATE-----
+                      x509_content
+                      -----END CERTIFICATE-----
+                      -----BEGIN CERTIFICATE-----
+                      x509_content
+                      -----END CERTIFICATE-----
+                      -----BEGIN CERTIFICATE-----
+                      x509 content
+                      -----END CERTIFICATE-----
+    post:
+      description: Import user certificates and update azure iotedge configuration.
+      tags:
+        - azure iotedge
+      requestBody:
+        description: The uploaded certificates and configuration.
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                caCertFile:
+                  description: device ca certificate
+                  format: binary
+                  type: string
+                caPkFile:
+                  description: device ca private key
+                  format: binary
+                  type: string
+                trustedCaFile:
+                  description: a file containing all the trusted CA
+                  format: binary
+                  type: string
+      responses:
+        '200':
+          description: azure iotedge configuration
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AzureIoTEdgeConfiguration'
+  /azure-iotedge/twin/properties:
+    get:
+      description: get twin properties setting.
+      tags:
+        - azure iotedge
+      responses:
+        '200':
+          description: twin properties setting.
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DeviceProperties'
+    put:
+      description: update twin properties setting.
+      tags:
+        - azure iotedge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceProperties'
+      responses:
+        '200':
+          description: twin properties setting.
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DeviceProperties'
+  /azure-iotedge/messages:
+    get:
+      description: get message groups setting.
+      tags:
+        - azure iotedge
+      responses:
+        '200':
+          description: message groups setting
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MessagePolicy'
+    post:
+      description: create a message group.
+      tags:
+        - azure iotedge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessagePolicy'
+      responses:
+        '200':
+          description: message group setting
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MessagePolicy'
+  /azure-iotedge/messages/{id}:
+    parameters:
+      - name: id
+        in: path
+        description: message group id.
+        schema:
+          type: integer
+        required: true
+    get:
+      description: get message group setting.
+      tags:
+        - azure iotedge
+      responses:
+        '200':
+          description: message policy setting
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/MessagePolicy'
+    put:
+      description: update message group setting.
+      tags:
+        - azure iotedge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessagePolicy'
+      responses:
+        '200':
+          description: message group setting
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/MessagePolicy'
+    delete:
+      description: delete message group setting.
+      tags:
+        - azure iotedge
+      responses:
+        '200':
+          description: message groups setting
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MessagePolicy'
+  /azure-iotedge/modules/auth:
+    post:
+      summary: auth service and get token
+      description: SOURCE=AzureIoTEdge
+      tags:
+        - azure iotedge
+      requestBody:
+        content:
+          application/json:
+            example:
+              name: thingspro-agent
+            schema:
+              properties:
+                name:
+                  type: string
+              required:
+                - name
+        required: true
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              example:
+                data:
+                  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6InRlc3QiLCJpYXQiOjE1NjM0MjA5MTQsImV4cCI6NDcxNzAyMDkxNH0.7oGA1VHBingnzeG7hHgWEiZ4JmoserFguyeb7_GUK6E
+              schema:
+                properties:
+                  data:
+                    properties:
+                      token:
+                        type: string
+  /azure-iotedge/defender:
+    get:
+      description: get defender runtime information.
+      tags:
+        - azure iotedge
+      responses:
+        '200':
+          description: defender runtime information
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    properties:
+                      since:
+                        type: string
+                        example: Wed 2023-05-03 16:47:46 CST
+                      status:
+                        type: string
+                        example: active(running)
+                      version:
+                        type: string
+                        example: 4.6.2
+  /azure-iotedge/defender/reload:
+    put:
+      description: reload defender (need enable defender).
+      tags:
+        - azure iotedge
+      responses:
+        '200':
+          description: message policy setting
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    properties:
+                      since:
+                        type: string
+                        example: Wed 2023-05-03 16:47:46 CST
+                      status:
+                        type: string
+                        example: active(running)
+                      version:
+                        type: string
+                        example: 4.6.2
+components:
+  securitySchemes:
+    auth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    AzureIoTEdgeConfiguration:
+      title: Azure IoT Edge configuration
+      properties:
+        iotedge:
+          description: IoT Edge runtime information
+          properties:
+            version:
+              type: string
+              readOnly: true
+            status:
+              type: string
+              enum:
+                - resetting
+                - running
+                - dead
+                - exited
+                - waiting
+              readOnly: true
+            since:
+              type: string
+              example: Mon 2016-10-07 09:49:16 CST
+              readOnly: true
+            match:
+              type: boolean
+              readOnly: true
+            suggestion:
+              type: string
+              readOnly: true
+            modules:
+              type: array
+              items:
+                description: IoT Edge modules runtime information
+                type: object
+                properties:
+                  status:
+                    description: One of created, restarting, running, removing, paused, exited, or dead
+                    readOnly: true
+                    type: string
+                  config:
+                    description: docker image URL
+                    readOnly: true
+                    type: string
+                  description:
+                    readOnly: true
+                    type: string
+                  name:
+                    description: module name
+                    readOnly: true
+                    type: string
+                  match:
+                    type: boolean
+                    readOnly: true
+                  suggestion:
+                    type: string
+                    readOnly: true
+        provisioning:
+          properties:
+            enable:
+              type: boolean
+              default: false
+            defenderEnable:
+              type: boolean
+              default: false
+            supportTwin:
+              type: boolean
+            globalEndpoint:
+              type: string
+              description: DPS url
+              default: https://global.azure-devices-provisioning.net
+            source:
+              type: string
+              description: The identity provisioning mode of the iotedge.
+              default: manual
+              enum:
+                - manual
+                - dps
+            method:
+              type: string
+              description: The identity provisioning mode of the iotedge.
+              default: tpm
+              enum:
+                - tpm
+                - symmetricKey
+                - x509
+            connectionString:
+              type: string
+              description: for source:manual
+              minLength: 1
+              maxLength: 1024
+            scopeId:
+              description: for source:dps; Value of a specific DPS instance's ID scope
+              type: string
+              minLength: 1
+              maxLength: 128
+            symmetricKey:
+              description: for source:dps,method:symmetricKey
+              type: string
+              minLength: 1
+              maxLength: 256
+            identityCert:
+              description: for source:dps,method:x509
+              type: string
+              minLength: 1
+              maxLength: 1024
+            identityPk:
+              description: for source:dps,method:x509
+              type: string
+              minLength: 1
+              maxLength: 1024
+            registrationId:
+              description: |
+                Use only lowercase alphanumeric and dash ('-') characters. For example, symm-key-device-007
+              type: string
+              minLength: 1
+              maxLength: 128
+            endorsementKey:
+              description: for source:dps,method:tpm;
+              type: string
+              readOnly: true
+        downstreamCerts:
+          properties:
+            mode:
+              type: string
+              description: The identity certication mode of the iotedge.
+              default: default
+              enum:
+                - default
+                - user
+                - moxa
+            caCertFile:
+              type: string
+              description: device ca certificate file name
+            caPkFile:
+              description: device ca private key file name
+              type: string
+            trustedCaFile:
+              type: string
+              description: a file containing all the trusted CA
+            certificateInfo:
+              type: object
+              readOnly: true
+              properties:
+                issuer:
+                  type: string
+                  readOnly: true
+                notAfter:
+                  type: string
+                  readOnly: true
+                subject:
+                  type: object
+                  properties:
+                    cn:
+                      type: string
+                      readOnly: true
+    DeviceProperties:
+      type: object
+      properties:
+        $origin:
+          type: object
+          properties:
+            $resource:
+              type: array
+              items:
+                type: object
+                required:
+                  - reportedPath
+                  - desiredPath
+                properties:
+                  source:
+                    type: string
+                    description: json path of property in resource; empty == "."(complete json object/array)
+                  reportedPath:
+                    type: string
+                    description: json path of reported property.
+                  desiredPath:
+                    type: string
+                    description: json path of desired property.
+      example:
+        device:
+          general:
+            - reportedPath: general
+              desiredPath: general
+          wan:
+            - reportedPath: wan
+              desiredPath: wan
+    MessagePolicy:
+      title: Message upload group configuration
+      required:
+        - id
+        - enable
+        - tags
+        - sendOutThreshold
+        - outputTopic
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        enable:
+          type: boolean
+        description:
+          type: string
+          maxLength: 1024
+        format:
+          description: |
+            jq filter string, use to change message format.
+            - empty means use default message format: {tags:{(.prvdName):{(.srcName):{(.tagName):{values:[{updateTimeStamp:(.ts/1000|todateiso8601),value:.dataValue}]}}}}}
+          type: string
+          default: ''
+          minLength: 0
+          maxLength: 4096
+        properties:
+          type: array
+          items:
+            type: object
+            required:
+              - key
+              - value
+            properties:
+              key:
+                type: string
+                minLength: 1
+              value:
+                type: string
+                minLength: 1
+        tags:
+          type: object
+          properties:
+            moduleName:
+              type: object
+              properties:
+                sourceName:
+                  type: array
+                  items:
+                    description: tag name
+                    type: string
+                    minLength: 1
+                    maxLength: 255
+        outputTopic:
+          type: string
+          default: sample
+          minLength: 1
+        onChange:
+          description: drop data if same with latest when enable onChange.
+          type: boolean
+          readOnly: true
+        minPublishInterval:
+          description: a fixed interval between the two publish. unit:second
+          type: integer
+          default: 0
+          minimum: 0
+          maximum: 60
+        samplingMode:
+          type: string
+          default: allChangedValues
+          enum:
+            - allValues
+            - latestValues
+            - allChangedValues
+            - latestChangedValues
+        customSamplingRate:
+          description: enable will use the pollingInterval that user input.
+          type: boolean
+          default: false
+        pollingInterval:
+          type: integer
+          description: unit:second, 0 means subscribe mode
+          default: 0
+          minLength: 0
+          maxLength: 86400
+        sendOutThreshold:
+          type: object
+          properties:
+            mode:
+              type: string
+              default: byTime
+              enum:
+                - byTime
+                - bySize
+                - immediately
+            time:
+              description: unit:second
+              type: integer
+              default: 60
+              minimum: 0
+              maximum: 86400
+            size:
+              description: unit:byte
+              type: integer
+              default: 4096
+              minimum: 0
+              maximum: 262144
+            sizeIdleTimer:
+              type: object
+              properties:
+                enable:
+                  type: boolean
+                  default: true
+                time:
+                  description: unit:second
+                  type: integer
+                  default: 60
+                  minimum: 0
+                  maximum: 86400
+      example:
+        id: 1
+        enable: true
+        description: my message group
+        outputTopic: sample
+        properties: []
+        onChange: false
+        minPublishInterval: 0
+        samplingMode: allValues
+        customSamplingRate: false
+        tags:
+          modbus:
+            myDevice1:
+              - di0
+              - di1
+        pollingInterval: 0
+        sendOutThreshold:
+          mode: byTime
+          time: 60
+    Tag:
+      type: object
+      properties:
+        srcName:
+          type: string
+        tagName:
+          type: string
+        dataType:
+          type: string
+          enum:
+            - uint8
+            - uint16
+            - uint32
+            - uint64
+            - int16
+            - int32
+            - int64
+            - float32
+            - float64
+            - string
+            - boolean
+            - bytearray
+        duration:
+          type: integer
+          format: int32
+        dataUnit:
+          type: string
+        access:
+          type: string
+          enum:
+            - ro
+            - wo
+            - rw
+      example:
+        srcName: system
+        tagName: cpuUsage
+        dataType: int32
+        duration: 1000
+        dataUnit: '%'
+        access: ro

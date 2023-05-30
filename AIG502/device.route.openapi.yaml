@@ -1,0 +1,124 @@
+openapi: 3.0.0
+info:
+  title: ThingsPro Device API
+  version: 0.0.1
+servers:
+  - url: https://{ip}:{port}/api/v1
+    variables:
+      ip:
+        default: 127.0.0.1
+        description: HTTPs Server IP
+      port:
+        default: '8443'
+        description: HTTPs Server Port
+security:
+  - auth: []
+paths:
+  /device/route:
+    get:
+      description: Get device route configuration.
+      tags:
+        - route
+      responses:
+        '200':
+          description: Device route configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteInformation'
+              example:
+                data:
+                  defaultRoute: LAN1
+                  priorityList:
+                    - LAN1
+                    - Cellular1
+    put:
+      tags:
+        - route
+      description: Update device route configuration.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteInformation'
+            example:
+              priorityList:
+                - Cellular1
+                - LAN1
+      responses:
+        '200':
+          description: Device route configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteInformation'
+              example:
+                data:
+                  defaultRoute: Cellular1
+                  priorityList:
+                    - Cellular1
+                    - LAN1
+  /device/network/wan:
+    get:
+      description: Get device route configuration of wan.
+      tags:
+        - route
+        - wan
+      responses:
+        '200':
+          description: Device route configuration of wan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WANInformation'
+              example:
+                data:
+                  name: enp0s31f6
+                  displayName: LAN1
+                  ip: 192.168.3.127
+                  netmask: 255.255.255.0
+                  gateway: 192.168.3.254
+                  dns:
+                    - 192.168.3.1
+components:
+  schemas:
+    RouteInformation:
+      title: Device route configuration
+      properties:
+        default:
+          type: string
+          description: default route display name.
+          readOnly: true
+        priorityList:
+          type: array
+          items:
+            type: string
+            pattern: '[A-Za-z0-9_-]+'
+            minLength: 2
+            maxLength: 15
+    WANInformation:
+      title: Current WAN information
+      properties:
+        name:
+          type: string
+          description: Interface name.
+        displayName:
+          type: string
+          description: Interface display name.
+        ip:
+          type: string
+          description: IP address for the Ethernet interface.
+        netmask:
+          type: string
+          description: Interface netmask.
+        gateway:
+          type: string
+          description: Gateway is a router or a proxy server that routes between networks.
+        dns:
+          type: array
+          description: |
+            The Domain Name System (DNS) is a hierarchical distributed naming
+            system for computers, services, or any resource connected to the
+            Internet or a private network.
+          items:
+            type: string

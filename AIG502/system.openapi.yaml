@@ -1,0 +1,489 @@
+openapi: 3.0.0
+info:
+  title: ThingsPro Systemn API
+  version: 0.0.1
+servers:
+  - url: https://{ip}:{port}/api/v1
+    variables:
+      ip:
+        default: 127.0.0.1
+        description: HTTPs Server IP of Device
+      port:
+        default: '8443'
+        description: HTTPs Server Port of Device
+security:
+  - auth: []
+paths:
+  /system/reboot:
+    get:
+      summary: Get reboot configuration
+      tags:
+        - reboot
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    properties:
+                      enableScheduler:
+                        type: boolean
+                      cronSchedule:
+                        type: string
+                        format: string
+                      now:
+                        type: boolean
+                      lastBootAt:
+                        type: string
+              example:
+                data:
+                  enableScheduler: true
+                  now: false
+                  cronSchedule: 0 0 ? * *
+                  lastBootAt: '2023-04-21T13:06:41+08:00'
+    put:
+      summary: Reboot system
+      tags:
+        - reboot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                enableScheduler:
+                  type: boolean
+                cronSchedule:
+                  type: string
+                  description: crontab (https://linux.die.net/man/5/crontab)
+                now:
+                  type: boolean
+            examples:
+              scheduler:
+                summary: reboot at 00:00:00am every day
+                value:
+                  enableScheduler: true
+                  cronSchedule: 0 0 ? * *
+              now:
+                summary: now
+                value:
+                  now: true
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    properties:
+                      enableScheduler:
+                        type: boolean
+                      cronSchedule:
+                        type: string
+                        format: string
+                      now:
+                        type: boolean
+                      lastBootAt:
+                        type: string
+              example:
+                data:
+                  enableScheduler: true
+                  now: false
+                  cronSchedule: 0 0 ? * *
+                  lastBootAt: '2023-04-21T13:06:41+08:00'
+  /system/configuration:
+    get:
+      summary: Export configurations
+      tags:
+        - configuration
+      responses:
+        '200':
+          description: get the export configurations tar.gz
+          content:
+            application/tar+gz:
+              schema:
+                type: string
+                format: binary
+    put:
+      summary: Upload configurations
+      tags:
+        - configuration
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              properties:
+                file:
+                  description: configuration file
+                  format: binary
+                  type: string
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    properties:
+                      filename:
+                        type: string
+                      filesize:
+                        type: integer
+                      diff:
+                        type: object
+                        properties:
+                          current:
+                            type: object
+                            properties:
+                              model:
+                                type: string
+                              tpeversion:
+                                type: string
+                          imported:
+                            type: object
+                            properties:
+                              model:
+                                type: string
+                              tpeversion:
+                                type: string
+                      sections:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                          import:
+                            type: boolean
+              example:
+                data:
+                  fileName: 2022-09-01-10-55-export-configuration.tar.gz
+                  fileSize: 46272
+                  diff: null
+                  sections:
+                    - name: systemService
+                      import: true
+                    - name: network
+                      import: true
+                    - name: device
+                      import: true
+                    - name: userAccount
+                      import: true
+                    - name: taghub
+                      import: true
+                    - name: server
+                      import: true
+                    - name: audit
+                      import: true
+                    - name: firewall
+                      import: true
+        '400':
+          description: error
+          content:
+            application/json:
+              schema:
+                properties:
+                  error:
+                    properties:
+                      code:
+                        type: integer
+                      message:
+                        type: string
+              examples:
+                filesize:
+                  summary: file size is over limitation to 5M
+                  value:
+                    error:
+                      code: 10000
+                      message: file is over size
+                extract:
+                  summary: invalid extraction
+                  value:
+                    error:
+                      code: 10001
+                      message: 'extract: invalid file or authentication failed'
+                diffModel:
+                  summary: AIG model different
+                  value:
+                    error:
+                      code: 10003
+                      message: 'unknown model: AIG-XXX'
+                diffVersion:
+                  summary: AIG version different
+                  value:
+                    error:
+                      code: 10004
+                      message: 'version not supported: 1.X'
+  /system/provision:
+    get:
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                data:
+                  enable: true
+                  schedule:
+                    enable: true
+                    disableAfterSec: 900
+              schema:
+                properties:
+                  data:
+                    properties:
+                      enable:
+                        description: enable discovery service
+                        type: boolean
+                      schedule:
+                        type: object
+                        properties:
+                          enable:
+                            description: schedule to disable discovery service after a period
+                            type: boolean
+                          disableAfterSec:
+                            description: time (in seconds) of period
+                            type: integer
+          description: success
+      summary: Get discovery service status
+      tags:
+        - provision
+    put:
+      requestBody:
+        content:
+          application/json:
+            example:
+              enable: true
+              schedule:
+                enable: true
+                disableAfterSec: 900
+            schema:
+              properties:
+                enable:
+                  description: enable discovery service
+                  type: boolean
+                schedule:
+                  type: object
+                  properties:
+                    enable:
+                      description: schedule to disable discovery service after a period
+                      type: boolean
+                    disableAfterSec:
+                      description: time (in seconds) of period
+                      type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                data:
+                  enable: true
+                  schedule:
+                    enable: true
+                    disableAfterSec: 900
+              schema:
+                properties:
+                  data:
+                    properties:
+                      enable:
+                        description: enable discovery service
+                        type: boolean
+                      schedule:
+                        type: object
+                        properties:
+                          enable:
+                            description: schedule to disable discovery service after a period
+                            type: boolean
+                          disableAfterSec:
+                            description: time (in seconds) of period
+                            type: integer
+          description: success
+      summary: Set discovery service configuration
+      tags:
+        - provision
+  /system/reset-default:
+    put:
+      summary: reset system to default configuration
+      tags:
+        - reset-default
+      parameters:
+        - in: query
+          name: mode
+          schema:
+            type: string
+            default: system
+            enum:
+              - factory
+              - system
+        - in: query
+          name: scopes
+          schema:
+            type: string
+            enum:
+              - keep-network-setting
+      responses:
+        '200':
+          description: success
+        '400':
+          description: |
+            1. unsupported mode
+            2. status is not ready
+            3. invalid scopes
+  /system/log:
+    get:
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                data:
+                  desiredDiskCacheSizeMB: 100
+                  enableTimeToLiveSec: false
+                  timeToLiveSec: 86400
+                  targetDiskName: System
+                  disks:
+                    - name: System
+                      mount: /var/log/
+                      device: /dev/mapper/p4_encrypte
+                      total: 1021005824
+                      free: 858275840
+                      used: 93106176
+                      percent: 9.5
+              schema:
+                $ref: '#/components/schemas/SyslogSetting'
+          description: success
+      summary: Get System Log setting configuration
+      tags:
+        - system log
+    put:
+      requestBody:
+        content:
+          application/json:
+            example:
+              desiredDiskCacheSizeMB: 2
+              enableTimeToLiveSec: true
+              timeToLiveSec: 86400
+              targetDiskName: System
+            schema:
+              $ref: '#/components/schemas/SyslogSetting'
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                data:
+                  desiredDiskCacheSizeMB: 2
+                  enableTimeToLiveSec: true
+                  timeToLiveSec: 86400
+                  targetDiskName: System
+                  disks:
+                    - name: System
+                      mount: /var/log/
+                      device: /dev/mapper/p4_encrypte
+                      total: 1021005824
+                      free: 858275840
+                      used: 93106176
+                      percent: 9.5
+              schema:
+                items:
+                  $ref: '#/components/schemas/SyslogSetting'
+                type: object
+          description: success
+      summary: Set System Log setting configuration
+      tags:
+        - system log
+components:
+  securitySchemes:
+    auth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    SyslogSetting:
+      properties:
+        data:
+          properties:
+            desiredDiskCacheSizeMB:
+              type: string
+            enableTimeToLiveSec:
+              type: boolean
+            timeToLiveSec:
+              description: unlimit if value <= 0
+              type: integer
+            targetDiskName:
+              description: target storage disk name
+              type: string
+            disks:
+              type: array
+              description: device disk information.
+              readOnly: true
+              items:
+                type: object
+                readOnly: true
+                properties:
+                  name:
+                    type: string
+                    description: disk name.
+                    minLength: 1
+                    maxLength: 255
+                    readOnly: true
+                    example: System
+                  mount:
+                    type: string
+                    description: disk mount point
+                    minLength: 1
+                    maxLength: 255
+                    readOnly: true
+                    example: /
+                  device:
+                    type: string
+                    description: disk physical device node path
+                    minLength: 1
+                    maxLength: 255
+                    readOnly: true
+                    example: /dev/root
+                  total:
+                    description: 'disk Total size (unit: byte)'
+                    type: integer
+                    minimum: 1
+                    maximum: 18446744073709552000
+                    readOnly: true
+                    example: 6948147200
+                  free:
+                    description: 'disk Free size (unit: byte)'
+                    type: integer
+                    minimum: 1
+                    maximum: 18446744073709552000
+                    readOnly: true
+                    example: 4857821184
+                  used:
+                    description: 'disk Used size (unit: byte)'
+                    type: integer
+                    minimum: 1
+                    maximum: 18446744073709552000
+                    readOnly: true
+                    example: 1798492160
+                  percent:
+                    description: Percent of used size
+                    type: number
+                    minimum: 0
+                    maximum: 100
+                    readOnly: true
+                    example: 27.019343397064695
+                  tags:
+                    type: object
+                    readOnly: true
+                    properties:
+                      used:
+                        type: string
+                        readOnly: true
+                        example: ''
+                      free:
+                        type: string
+                        readOnly: true
+                        example: ''
+                      percent:
+                        type: string
+                        readOnly: true
+                        example: ''

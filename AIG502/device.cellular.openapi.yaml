@@ -1,0 +1,588 @@
+openapi: 3.0.0
+info:
+  version: 0.0.0
+  title: ThingsPro Cellular APIs
+servers:
+  - url: https://{ip}:{port}/api/v1
+    variables:
+      ip:
+        default: 127.0.0.1
+        description: HTTPs Server IP
+      port:
+        default: '8443'
+        description: HTTPs Server Port
+security:
+  - auth: []
+paths:
+  /device/cellulars:
+    get:
+      description: Get cellular interfaces configuration.
+      tags:
+        - cellulars
+      responses:
+        '200':
+          description: All cellular interfaces
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cellulars'
+              examples:
+                AllCellularInformation:
+                  $ref: '#/components/examples/GetCellulars'
+                AllCellularInformationNotAvailable:
+                  $ref: '#/components/examples/NoCellularModuleAvailable'
+    put:
+      tags:
+        - cellulars
+      description: Update cellular interfaces configuration.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ConfigurationRequest'
+            examples:
+              PutCellulars:
+                $ref: '#/components/examples/PutCellularsRequest'
+      responses:
+        '200':
+          description: Network cellular configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigurationResponse'
+              examples:
+                CellularConfiguration:
+                  $ref: '#/components/examples/PutCellularsResponse'
+  /device/cellulars/{id}:
+    parameters:
+      - name: id
+        in: path
+        description: Cellular interface id.
+        schema:
+          type: integer
+        required: true
+    get:
+      description: Get cellular interface configuration.
+      tags:
+        - cellulars
+      responses:
+        '200':
+          description: Cellular interface configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cellular'
+              examples:
+                CellularInformation:
+                  $ref: '#/components/examples/GetCellular'
+    put:
+      description: Update cellular configuration.
+      tags:
+        - cellulars
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigurationRequest'
+            examples:
+              PutCellular:
+                $ref: '#/components/examples/PutCellularRequest'
+      responses:
+        '200':
+          description: Cellular interface configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigurationResponse'
+              examples:
+                CellularConfiguration:
+                  $ref: '#/components/examples/PutCellularResponse'
+components:
+  schemas:
+    Cellulars:
+      title: All cellulars interface runtime and configuration info.
+      properties:
+        data:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/RuntimeInfo'
+              - $ref: '#/components/schemas/ConfigurationRequest'
+        count:
+          type: integer
+          description: Array length.
+          example: 1
+    Cellular:
+      title: cellular interface runtime and configuration info.
+      properties:
+        data:
+          allOf:
+            - $ref: '#/components/schemas/RuntimeInfo'
+            - $ref: '#/components/schemas/ConfigurationRequest'
+    ConfigurationRequest:
+      required:
+        - enable
+        - profileTimeout
+        - profiles
+        - keepalive
+      properties:
+        id:
+          type: integer
+          description: Interface id.
+          example: 1
+        enable:
+          type: boolean
+          description: Enable Cellular Networking.
+        profileTimeout:
+          type: integer
+          description: Retry timeout in seconds for switch profiles.
+          minimum: 60
+          maximum: 3600
+          example: 300
+        profiles:
+          type: array
+          description: Profiles for redundancy
+          items:
+            $ref: '#/components/schemas/CellularProfile'
+        keepalive:
+          $ref: '#/components/schemas/CellularKeepalive'
+    ConfigurationResponse:
+      allOf:
+        - type: object
+          properties:
+            displayName:
+              type: string
+              description: Interface display name.
+              readOnly: true
+              example: Cellular1
+        - $ref: '#/components/schemas/ConfigurationRequest'
+    RuntimeInfo:
+      title: Cellular Runtime Information
+      properties:
+        displayName:
+          type: string
+          description: Interface display name.
+          readOnly: true
+          example: Cellular1
+        name:
+          type: string
+          description: Interface name.
+          readOnly: true
+          example: wwan0
+        capabilities:
+          title: Cellular Capabilities
+          readOnly: true
+          properties:
+            sim:
+              description: Numbers of SIM slots provided
+              type: integer
+              readOnly: true
+              example: 1
+        CurrentProfileName:
+          type: string
+          description: Current used profile name.
+          readOnly: true
+          example: Profile-1
+        mode:
+          type: string
+          description: Given cellular connection mode. Could be one of `"umts"`, `"lte"`.
+          readOnly: true
+          example: lte
+        signalStrength:
+          type: integer
+          readOnly: true
+          description: |
+            Cellular RF signal strength.
+            - 0: no signal
+            - 1: poor
+            - 2: fair
+            - 3: good
+            - 4: excellent
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+            - 4
+        signal:
+          type: object
+          readOnly: true
+          description: Cellular RF signal strength, include RSSI and RSRP.
+          properties:
+            rssi:
+              type: integer
+              description: Cellular RF signal strength, in `dbm`. Value `0` indicates no SIM card found.
+              example: -67
+            rsrp:
+              type: integer
+              description: |
+                Reference Signal Received Quality, a C/I type of measurement and
+                it indicates the quality of the received reference signal
+        operatorName:
+          type: string
+          description: Indicate current operator name if exist.
+          readOnly: true
+          example: TWM
+        lac:
+          type: string
+          description: Location area code.
+          readOnly: true
+          example: 11114
+        tac:
+          type: string
+          description: Tracking area code (LTE).
+          readOnly: true
+          example: ''
+        cellId:
+          type: string
+          description: Cell ID.
+          readOnly: true
+          example: 6326
+        iccId:
+          type: string
+          description: ICC ID of SIM card.
+          readOnly: true
+          example: 89886971410730170000
+        imsi:
+          type: string
+          description: IMSI of SIM card.
+          readOnly: true
+          example: 466977300046885
+        imei:
+          type: string
+          description: IMEI of cellular module.
+          readOnly: true
+          example: 359841080332053
+        pinRetryRemain:
+          type: integer
+          description: PIN Retry remaining.
+          readOnly: true
+          example: 3
+        status:
+          type: string
+          description: |
+            Indicate current status of cellular connection.
+            - initializing: get module and SIM card info, unlock SIM card if necessary
+            - sim_pin_locked: SIM card is locked with a PIN code
+            - connecting: during connect state
+            - connected: connect success with keepalive success or success with keepalive disabled
+            - radio_power_off: the modem radio power is off but sim power may not off
+            - radio_power_on: the modem radio power is on but idle and not registered, not searching
+            - service_searching: roaming
+            - service_attached: attached with a base station
+            - nosim: no SIM card or unknown error with SIM card status
+            - disabled: cellular service is disabled
+          enum:
+            - initializing
+            - sim_pin_locked
+            - sim_puk_locked
+            - connecting
+            - connected
+            - radio_power_off
+            - radio_power_on
+            - service_searching
+            - service_attached
+            - nosim
+            - disabled
+          readOnly: true
+          example: ready
+        mac:
+          type: string
+          readOnly: true
+          description: The identical MAC address.
+          example: '00:00:11:12:13:14'
+        ip:
+          type: string
+          description: IP address. `""` when not connected.
+          readOnly: true
+          example: ''
+        netmask:
+          type: string
+          description: Subnet mask. `""` when not connected.
+          readOnly: true
+          example: ''
+        gateway:
+          type: string
+          description: Gateway IP address. `""` when not connected.
+          readOnly: true
+          example: ''
+        dns:
+          type: array
+          description: A list of DNS IP addresses. `[]` when not connected.
+          items:
+            type: string
+          readOnly: true
+          example: []
+    CellularProfile:
+      title: Cellular Profile
+      type: object
+      required:
+        - name
+        - pdpContext
+      properties:
+        name:
+          type: string
+          description: Alias name for the profile.
+          minLength: 1
+          maxLength: 100
+          example: TWM
+        pdpContext:
+          type: object
+          description: PDP context data for dialing up to Cellular Network.
+          properties:
+            apn:
+              type: string
+              description: Edit APN of the specified PDP context.
+              default: internet
+              minLength: 1
+              maxLength: 100
+              pattern: (?=^.{1,100}$)(?:^(?!\.|-)[a-zA-Z0-9\-]{0,62}[a-zA-Z0-9])(?:\.(?!\.|\-)[a-zA-Z0-9\-]{0,62}[a-zA-Z0-9])*$
+              example: internet
+            type:
+              type: string
+              description: Indicate the PDP type to use.
+              enum:
+                - ipv4
+                - ipv6
+                - ipv4v6
+              default: ipv4
+              example: ipv4
+            auth:
+              type: object
+              description: The negotiated authentication.
+              required:
+                - protocol
+              properties:
+                username:
+                  type: string
+                  description: Username for PAP and/or CHAP.
+                  minLength: 0
+                  maxLength: 255
+                  example: ''
+                password:
+                  type: string
+                  description: Password for PAP and/or CHAP.
+                  minLength: 0
+                  maxLength: 255
+                  example: ''
+        pinCode:
+          type: string
+          description: PIN code of SIM card. Takes no effect when SIM card PIN weren't not set.
+          minLength: 0
+          maxLength: 8
+          pattern: ^(|[0-9]{4,8})$
+          example: '0000'
+        simSlot:
+          type: string
+          description: |
+            Profile Simslot.
+            - sim:\<sim-slot\>
+            pattern: >-
+              ^([1-2])$
+          example:
+            - sim:1
+    CellularKeepalive:
+      title: Keepalive Settings
+      type: object
+      required:
+        - enable
+      properties:
+        enable:
+          type: boolean
+          description: Enable/disable Cellular connection keep-alive by ping.
+        targetHost:
+          type: string
+          description: IPv4 address or domain name to ping.
+          minLength: 2
+          maxLength: 253
+          default: 8.8.8.8
+          example: 8.8.8.8
+        intervalSec:
+          type: integer
+          minimum: 10
+          maximum: 86400
+          description: Check alive interval.
+          default: 60
+          example: 60
+  examples:
+    GetCellulars:
+      summary: all cellulars information
+      value:
+        count: 1
+        data:
+          - CurrentProfileName: Profile-1
+            ip: ''
+            tac: ''
+            type: cellular
+            operatorName: ''
+            keepalive:
+              intervalSec: 60
+              enable: true
+              targetHost: 8.8.8.8
+            capabilities:
+              sim: 1
+            id: 1
+            gateway: ''
+            profileTimeout: 120
+            imsi: '466977300046885'
+            status: ready
+            enable: false
+            dns: []
+            lac: '11114'
+            mac: '00:00:11:12:13:14'
+            imei: '359841080332053'
+            cellId: '6326'
+            name: wwan0
+            displayName: Cellular1
+            signalStrength: 4
+            signal:
+              rssi: -67
+              rsrp: 0
+            pinRetryRemain: -1
+            netmask: ''
+            profiles:
+              - pinCode: '0000'
+                simSlot: 1
+                name: SIM1
+                pdpContext:
+                  apn: internet
+                  auth:
+                    username: ''
+                    password: ''
+                  type: ipv4
+            mode: lte
+            iccId: '89886971410730170000'
+    GetCellular:
+      summary: cellular information of requested id
+      value:
+        CurrentProfileName: Profile-1
+        ip: ''
+        tac: ''
+        type: cellular
+        operatorName: ''
+        keepalive:
+          intervalSec: 60
+          enable: true
+          targetHost: 8.8.8.8
+        capabilities:
+          sim: 1
+        id: 1
+        gateway: ''
+        profileTimeout: 120
+        imsi: '466977300046885'
+        status: ready
+        enable: false
+        dns: []
+        lac: '11114'
+        mac: '00:00:11:12:13:14'
+        imei: '359841080332053'
+        cellId: '6326'
+        name: wwan0
+        displayName: Cellular1
+        signalStrength: 4
+        signal:
+          rssi: -67
+          rsrp: 0
+        pinRetryRemain: -1
+        netmask: ''
+        profiles:
+          - pinCode: '0000'
+            simSlot: 1
+            name: SIM1
+            pdpContext:
+              apn: internet
+              auth:
+                username: ''
+                password: ''
+              type: ipv4
+        mode: lte
+        iccId: '89886971410730170000'
+    PutCellularsRequest:
+      summary: put cellulars settings request
+      value:
+        - id: 1
+          enable: true
+          keepalive:
+            intervalSec: 60
+            enable: true
+            targetHost: 8.8.8.8
+          profileTimeout: 120
+          profiles:
+            - pinCode: '0000'
+              simSlot: 1
+              name: SIM1
+              pdpContext:
+                apn: internet
+                auth:
+                  username: ''
+                  password: ''
+                type: ipv4
+    PutCellularsResponse:
+      summary: updated cellulars settings
+      value:
+        - id: 1
+          displayName: Cellular1
+          enable: true
+          keepalive:
+            intervalSec: 60
+            enable: true
+            targetHost: 8.8.8.8
+          profileTimeout: 120
+          profiles:
+            - pinCode: '0000'
+              simSlot: 1
+              name: SIM1
+              pdpContext:
+                apn: internet
+                auth:
+                  username: ''
+                  password: ''
+                type: ipv4
+    PutCellularRequest:
+      summary: put a cellular settings
+      value:
+        enable: true
+        keepalive:
+          intervalSec: 60
+          enable: true
+          targetHost: 8.8.8.8
+        profileTimeout: 120
+        profiles:
+          - pinCode: '0000'
+            simSlot: 1
+            name: SIM1
+            pdpContext:
+              apn: internet
+              auth:
+                username: ''
+                password: ''
+              type: ipv4
+    PutCellularResponse:
+      summary: updated cellular settings
+      value:
+        id: 1
+        displayName: Cellular1
+        enable: true
+        keepalive:
+          intervalSec: 60
+          enable: true
+          targetHost: 8.8.8.8
+        profileTimeout: 120
+        profiles:
+          - pinCode: '0000'
+            simSlot: 1
+            name: SIM1
+            pdpContext:
+              apn: internet
+              auth:
+                username: ''
+                password: ''
+              type: ipv4
+    NoCellularModuleAvailable:
+      summary: no cellualr module
+      value:
+        data: []

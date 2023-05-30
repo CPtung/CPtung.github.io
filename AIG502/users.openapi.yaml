@@ -1,0 +1,977 @@
+openapi: 3.0.0
+info:
+  title: ThingsPro User Auth APIs
+  version: 0.0.0
+servers:
+  - url: https://{ip}:{port}/api/v1
+    variables:
+      ip:
+        default: 127.0.0.1
+        description: HTTPs Server IP of Device
+      port:
+        default: '8443'
+        description: HTTPs Server Port of Device
+security:
+  - auth: []
+paths:
+  /permissions:
+    get:
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                count: 2
+                data:
+                  - description: ''
+                    id: SYS_SECURITY_RW
+                    name: User/Role Management
+                  - description: ''
+                    id: SYS_MAINTENANCE_RW
+                    name: Device Management
+              schema:
+                properties:
+                  count:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Permission'
+          description: success
+      summary: Query permissions
+      tags:
+        - users
+  /roles:
+    get:
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                count: 1
+                data:
+                  - description: ''
+                    id: 1
+                    name: Administrator
+                    permissions:
+                      - SYS_SECURITY_RW
+                      - SYS_MAINTENANCE_RW
+                    users:
+                      - id: 1
+                        name: admin
+                      - id: 2
+                        name: myuser
+              schema:
+                properties:
+                  count:
+                    type: integer
+                  data:
+                    items:
+                      $ref: '#/components/schemas/Role'
+                    type: array
+          description: success
+      summary: Query roles
+      tags:
+        - users
+    post:
+      requestBody:
+        content:
+          application/json:
+            example:
+              description: ''
+              name: myrole
+              permissions:
+                - SYS_SECURITY_RW
+            schema:
+              properties:
+                description:
+                  type: string
+                name:
+                  type: string
+                permissions:
+                  items:
+                    description: ID of permission
+                    type: string
+              required:
+                - name
+                - permissions
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                data:
+                  description: moxa best
+                  id: 2
+                  name: myrole
+                  permissions:
+                    - SYS_SECURITY_RW
+                  users: []
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Role'
+          description: success
+      summary: create a role
+      tags:
+        - users
+  /roles/{id}:
+    delete:
+      responses:
+        '204':
+          description: success
+      summary: Delete role by ID
+      tags:
+        - users
+    get:
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                data:
+                  description: moxa best
+                  id: 2
+                  name: myrole
+                  permissions:
+                    - SYS_SECURITY_RW
+                  users: []
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Role'
+          description: success
+      summary: get role by ID
+      tags:
+        - users
+    parameters:
+      - description: ID of role
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+    put:
+      requestBody:
+        content:
+          application/json:
+            example:
+              description: ''
+              name: myrole
+              permissions:
+                - SYS_SECURITY_RW
+            schema:
+              properties:
+                description:
+                  type: string
+                name:
+                  type: string
+                permissions:
+                  items:
+                    description: ID of permission
+                    type: string
+              required:
+                - name
+                - permissions
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                data:
+                  description: moxa best
+                  id: 2
+                  name: myrole
+                  permissions:
+                    - SYS_SECURITY_RW
+                  users: []
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Role'
+          description: success
+      summary: update role by ID
+      tags:
+        - users
+  /users:
+    get:
+      summary: Query account list
+      tags:
+        - users
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              examples:
+                accountResponse:
+                  $ref: '#/components/examples/accountsResponse'
+              schema:
+                properties:
+                  count:
+                    type: integer
+                  data:
+                    $ref: '#/components/schemas/Account'
+                type: object
+    post:
+      summary: Add new account
+      tags:
+        - users
+      requestBody:
+        content:
+          application/json:
+            examples:
+              accountRequest:
+                $ref: '#/components/examples/accountRequest'
+            schema:
+              $ref: '#/components/schemas/Account'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              examples:
+                accountResponse:
+                  $ref: '#/components/examples/accountResponse'
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Account'
+          description: success
+  /users/{id}:
+    delete:
+      summary: Delete account by ID
+      tags:
+        - users
+      parameters:
+        - description: ID of user
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: success
+    get:
+      summary: Query account by ID
+      tags:
+        - users
+      parameters:
+        - description: ID of account
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              examples:
+                accountResponse:
+                  $ref: '#/components/examples/accountResponse'
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Account'
+        '403':
+          description: account without Administrator role can not access this API
+    put:
+      summary: Update account by ID
+      tags:
+        - users
+      parameters:
+        - description: ID of user
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            examples:
+              accountRequest:
+                $ref: '#/components/examples/accountRequest'
+            schema:
+              $ref: '#/components/schemas/Account'
+        required: true
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              examples:
+                accountResponse:
+                  $ref: '#/components/examples/accountResponse'
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Account'
+        '400':
+          description: bad request
+        '403':
+          description: account without Administrator role can not access this API
+  /users/{id}/password:
+    put:
+      summary: Update account's password by ID
+      tags:
+        - users
+      parameters:
+        - description: ID of account
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            example:
+              newPassword: '123456'
+              oldPassword: '654321'
+            schema:
+              properties:
+                newPassword:
+                  type: string
+                oldPassword:
+                  description: account with admin role do not need pass oldPassword
+                  type: string
+        required: true
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              examples:
+                accountResponse:
+                  $ref: '#/components/examples/accountResponse'
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Account'
+        '400':
+          description: bad request
+        '403':
+          description: account without Administrator role can not access this API
+  /users/me:
+    get:
+      summary: Query who I am
+      tags:
+        - users
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              example:
+                data:
+                  changedPasswordAt: null
+                  createdAt: '2019-09-24T05:52:28.912234779Z'
+                  email: null
+                  expiredAfter: null
+                  id: 3
+                  isActive: true
+                  loginAt: '0001-01-01T00:00:00Z'
+                  name: myuser
+                  permissions:
+                    - SYS_MAINTENANCE_RW
+                    - SYS_SECURITY_RW
+                  remindToChangePassword: null
+                  roles:
+                    - id: 1
+                      name: Administrator
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Account'
+    put:
+      summary: Update current account's information
+      tags:
+        - users
+      requestBody:
+        content:
+          application/json:
+            example:
+              email: aa@aaa.aaa
+              expiredAfter: '2023-01-31T16:00:00.000Z'
+              isActive: true
+              roles:
+                - id: 1
+            schema:
+              properties:
+                email:
+                  type: string
+                expiredAfter:
+                  type: string
+                isActive:
+                  type: boolean
+                roles:
+                  items:
+                    type: integer
+        required: true
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              example:
+                data:
+                  changedPasswordAt: null
+                  createdAt: '2019-09-24T05:52:28.912234779Z'
+                  email: null
+                  expiredAfter: null
+                  id: 3
+                  isActive: true
+                  loginAt: '0001-01-01T00:00:00Z'
+                  name: myuser
+                  permissions:
+                    - SYS_MAINTENANCE_RW
+                    - SYS_SECURITY_RW
+                  roles:
+                    - id: 1
+                      name: Administrator
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Account'
+  /users/me/password:
+    put:
+      summary: Update current account's password
+      tags:
+        - users
+      requestBody:
+        content:
+          application/json:
+            example:
+              newPassword: '123456'
+              oldPassword: moxa1234
+            schema:
+              properties:
+                newPassword:
+                  type: string
+                oldPassword:
+                  description: account with admin role do not need pass oldPassword
+                  type: string
+        required: true
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              example:
+                data:
+                  changedPasswordAt: null
+                  createdAt: '2019-09-24T05:52:28.912234779Z'
+                  email: null
+                  expiredAfter: null
+                  id: 3
+                  isActive: true
+                  loginAt: '0001-01-01T00:00:00Z'
+                  name: myuser
+                  permissions:
+                    - SYS_MAINTENANCE_RW
+                    - SYS_SECURITY_RW
+                  roles:
+                    - id: 1
+                      name: Administrator
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Account'
+  /password-policy:
+    get:
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                data:
+                  atLeastOneDigit: true
+                  atLeastOneSpecial: true
+                  lengthMax: 256
+                  lengthMin: 8
+                  mixedUpperLowerLetters: true
+              schema:
+                $ref: '#/components/schemas/PasswordPolicy'
+          description: success
+      summary: Get account security policy
+      tags:
+        - password-policy
+    put:
+      requestBody:
+        content:
+          application/json:
+            example:
+              atLeastOneDigit: true
+              atLeastOneSpecial: true
+              lengthMax: 256
+              lengthMin: 8
+              mixedUpperLowerLetters: true
+            schema:
+              $ref: '#/components/schemas/PasswordPolicy'
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                data:
+                  atLeastOneDigit: true
+                  atLeastOneSpecial: true
+                  lengthMax: 256
+                  lengthMin: 8
+                  mixedUpperLowerLetters: true
+              schema:
+                $ref: '#/components/schemas/PasswordPolicy'
+          description: success
+      summary: Set account security policy
+      tags:
+        - password-policy
+  /auth:
+    get:
+      description: This API returns wether authentication token in header is valid by HTTP status code
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              example:
+                data: ok
+              schema:
+                properties:
+                  data:
+                    type: string
+        '401':
+          description: unauthorized
+      summary: Get authentication status
+      tags:
+        - authentication
+    post:
+      requestBody:
+        content:
+          application/json:
+            example:
+              acceptEULA: true
+              name: admin
+              password: moxa1234
+            schema:
+              properties:
+                acceptEULA:
+                  type: boolean
+                name:
+                  type: string
+                password:
+                  type: string
+              required:
+                - name
+                - password
+              type: object
+        required: true
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              example:
+                data:
+                  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6InRlc3QiLCJpYXQiOjE1NjM0MjA5MTQsImV4cCI6NDcxNzAyMDkxNH0.7oGA1VHBingnzeG7hHgWEiZ4JmoserFguyeb7_GUK6E
+                  user:
+                    email: null
+                    expiredAfter: '2050-01-31T16:00:00.000Z'
+                    id: 1
+                    isActive: true
+                    loginAt: '0001-01-01T00:00:00Z'
+                    name: admin
+                    lastReadLogID: 0
+                    remindPasswordExpiredAfter: null
+                    permissions:
+                      - SYS_MAINTENANCE_RW
+                      - SYS_SECURITY_RW
+                    roles:
+                      - id: 1
+                        name: Administrator
+              schema:
+                properties:
+                  data:
+                    properties:
+                      token:
+                        type: string
+                      user:
+                        $ref: '#/components/schemas/Account'
+        '401':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        description: HTTP status code.
+                      message:
+                        type: string
+                        description: Error message.
+              examples:
+                unauth:
+                  summary: unauthorized
+                  value:
+                    error:
+                      code: 401
+                      message: The account or password you entered is not correct.
+          description: unauthorized
+      security: []
+      summary: Sign in
+      tags:
+        - authentication
+  /auth-lock:
+    get:
+      summary: Get auth lock configuration
+      tags:
+        - auth lock
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              example:
+                data:
+                  enable: true
+                  failWindow: 60
+                  failTimes: 10
+                  lockWindow: 600
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/auth-lock-config'
+    put:
+      summary: update auth lock configuration
+      tags:
+        - auth lock
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              enable: true
+              failWindow: 60
+              failTimes: 10
+              lockWindow: 600
+            schema:
+              $ref: '#/components/schemas/auth-lock-config'
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              example:
+                data:
+                  enable: true
+                  failWindow: 60
+                  failTimes: 10
+                  lockWindow: 600
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/auth-lock-config'
+  /auth-lock/users:
+    get:
+      summary: Get locked account id
+      tags:
+        - auth lock
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              example:
+                data:
+                  - 1
+                  - 2
+                  - 3
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/auth-lock-list'
+  /sessions:
+    get:
+      summary: get session list
+      tags:
+        - sessions
+      parameters:
+        - name: account
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              example:
+                data:
+                  - id: 1
+                    userid: 1
+                    username: admin
+                    create: '2022-10-13T01:31:48.964368971Z'
+                    access: '2022-10-13T01:31:49.334247271Z'
+                  - id: 2
+                    userid: 2
+                    username: terry
+                    create: '2022-10-13T01:35:38.919457191Z'
+                    access: '2022-10-13T01:35:38.919457191Z'
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/sessions'
+    delete:
+      summary: delete sessions
+      tags:
+        - sessions
+      parameters:
+        - name: account
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: success
+  /sessions/{id}:
+    parameters:
+      - description: ID of session
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: get session by ID
+      tags:
+        - sessions
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              example:
+                data:
+                  - id: 1
+                    userid: 1
+                    username: admin
+                    create: '2022-10-13T01:31:48.964368971Z'
+                    access: '2022-10-13T01:31:49.334247271Z'
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/session'
+    delete:
+      summary: delete session by ID
+      tags:
+        - sessions
+      responses:
+        '200':
+          description: success
+components:
+  securitySchemes:
+    auth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    PasswordPolicy:
+      properties:
+        atLeastOneDigit:
+          default: true
+          description: password must be at least one digit
+          type: boolean
+        atLeastOneSpecial:
+          default: true
+          description: password must be at least one special chararacter
+          type: boolean
+        lengthMax:
+          default: 256
+          description: password maximum length
+          maximum: 256
+          type: integer
+        lengthMin:
+          default: 8
+          description: password minimum length
+          minimum: 8
+          type: integer
+        mixedUpperLowerLetters:
+          default: true
+          description: password must be mixed upper and lower case
+          type: boolean
+    Permission:
+      properties:
+        description:
+          description: Description of permission.
+          type: string
+        id:
+          type: string
+        name:
+          description: Name of permission.
+          type: string
+    Role:
+      properties:
+        description:
+          type: string
+        id:
+          type: integer
+        name:
+          type: string
+        permissions:
+          type: array
+          items:
+            description: ID of permission
+            type: string
+        users:
+          items:
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+    Role-simple:
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    Account:
+      properties:
+        changedPasswordAt:
+          format: date-time
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+        email:
+          type: string
+        description:
+          type: string
+        expiredAfter:
+          format: date-time
+          type: string
+        id:
+          type: integer
+        isActive:
+          type: boolean
+        loginAt:
+          format: date-time
+          type: string
+        name:
+          type: string
+        lastReadLogID:
+          type: integer
+        remindPasswordExpiredAfter:
+          format: date-time
+          type: string
+        permissions:
+          type: array
+          items:
+            description: ID of permission
+            type: string
+        roles:
+          type: array
+          items:
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+    auth-lock-config:
+      properties:
+        enable:
+          type: boolean
+        failWindow:
+          type: number
+        failTimes:
+          type: number
+        lockWindow:
+          type: number
+      required:
+        - enable
+        - failWindow
+        - failTimes
+        - lockWindow
+    auth-lock-list:
+      type: array
+      items:
+        type: number
+    session:
+      properties:
+        id:
+          type: number
+        userid:
+          type: number
+        username:
+          type: string
+        create:
+          type: string
+        access:
+          type: string
+    sessions:
+      type: array
+      items:
+        $ref: '#/components/schemas/session'
+  examples:
+    accountsResponse:
+      summary: accounts info response
+      value:
+        count: 1
+        data:
+          - changedPasswordAt: null
+            createdAt: '2019-09-24T05:52:28.912234779Z'
+            email: null
+            description: null
+            expiredAfter: '2050-01-31T16:00:00.000Z'
+            id: 1
+            isActive: true
+            loginAt: '0001-01-01T00:00:00Z'
+            name: admin
+            lastReadLogID: 0
+            remindPasswordExpiredAfter: null
+            permissions:
+              - SYS_MAINTENANCE_RW
+              - SYS_SECURITY_RW
+            roles:
+              - id: 1
+                name: Administrator
+    accountResponse:
+      summary: account info response
+      value:
+        data:
+          changedPasswordAt: null
+          createdAt: '2019-09-24T05:52:28.912234779Z'
+          email: null
+          description: null
+          expiredAfter: '2050-01-31T16:00:00.000Z'
+          id: 1
+          isActive: true
+          loginAt: '0001-01-01T00:00:00Z'
+          name: admin
+          lastReadLogID: 0
+          remindPasswordExpiredAfter: null
+          permissions:
+            - SYS_MAINTENANCE_RW
+            - SYS_SECURITY_RW
+          roles:
+            - id: 1
+              name: Administrator
+    accountRequest:
+      summary: account config request
+      value:
+        expiredAfter: '2050-01-31T16:00:00.000Z'
+        isActive: true
+        name: admin
+        password: admin@123
+        roles:
+          - id: 1

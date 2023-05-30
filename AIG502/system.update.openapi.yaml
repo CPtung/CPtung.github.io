@@ -1,0 +1,247 @@
+openapi: 3.0.0
+info:
+  version: 0.0.0
+  title: ThingsPro Software Update API
+servers:
+  - url: https://{ip}:{port}/api/v1
+    variables:
+      ip:
+        default: 127.0.0.1
+        description: HTTPs Server IP of Device
+      port:
+        default: '8443'
+        description: HTTPs Server Port of Device
+security:
+  - auth: []
+paths:
+  /system/update:
+    get:
+      tags:
+        - Update
+      summary: Get available updates for current product
+      description: returns available updates
+      operationId: getUpdates
+      parameters:
+        - in: query
+          name: scan
+          description: Get real-time updates or by last scan
+          schema:
+            type: boolean
+            example: true
+        - in: query
+          name: patches
+          description: Get all available packages of product or just main
+          schema:
+            type: boolean
+            example: false
+      responses:
+        '200':
+          description: Available updates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    format: int32
+                    example: 1
+                  checktime:
+                    type: string
+                    example: '2023-05-02T03:51:22Z'
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AvailableUpdate'
+    put:
+      tags:
+        - Update
+      summary: Trigger update
+      description: Trigger update(s) over the air or by offline file
+      operationId: update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+                example: openssl
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                verificationFile:
+                  type: string
+                  format: binary
+      responses:
+        '202':
+          description: Successfully trigger the update
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    format: int32
+                    example: 1
+                  message:
+                    type: string
+                    example: Successfully trigger
+                  data:
+                    type: array
+                    items:
+                      type: string
+                      example: openssl
+        '400':
+          description: Match selected packages is empty
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        format: int32
+                        example: 400
+                      message:
+                        type: string
+                        example: match selected packages is empty
+  /system/update/history:
+    get:
+      tags:
+        - Update
+      summary: Get update history
+      description: Returns the update history
+      operationId: getUpdateHistory
+      responses:
+        '200':
+          description: Successfully get the history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UpdateRecord'
+  /system/update/settings:
+    patch:
+      tags:
+        - Update
+      summary: Patch update setting
+      description: Returns the update settings
+      operationId: patchUpdateSettings
+      responses:
+        '200':
+          description: Successfully get the history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateSettings'
+    get:
+      tags:
+        - Update
+      summary: Get update settings
+      description: Returns the update settings
+      operationId: getUpdateSettings
+      responses:
+        '200':
+          description: Successfully get the history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateSettings'
+    put:
+      tags:
+        - Update
+      summary: Put update settings
+      description: Returns the update settings
+      operationId: putUpdateSettings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSettings'
+      responses:
+        '200':
+          description: Successfully put the update settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateSettings'
+components:
+  schemas:
+    AvailableUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          example: moxa-aig-502-tpe
+        currentVersion:
+          type: string
+          example: 1.0.0
+        size:
+          description: package size with unit KB
+          type: integer
+          format: int32
+          example: 10000
+        newVersion:
+          type: string
+          example: 1.1.0
+        category:
+          type: string
+          example: base-package
+    UpdateRecord:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Success
+        name:
+          type: string
+          example: moxa-aig-502-tpe
+        version:
+          type: string
+          example: 1.1.0
+        size:
+          type: integer
+          format: int32
+          example: 10000
+        status:
+          type: string
+          enum:
+            - success
+            - failure
+          example: success
+        time:
+          type: string
+          example: '2022-10-03T08:18:07Z'
+        type:
+          type: string
+          example: package
+    UpdateSettings:
+      type: object
+      properties:
+        allowUpdate:
+          type: boolean
+          example: true
+        allowOverCellular:
+          type: boolean
+          example: false
+        snapshotBeforeUpdate:
+          type: boolean
+          example: true
+        autoScan:
+          type: boolean
+          example: false
+        autoScanExpression:
+          description: https://crontab.guru/
+          type: string
+          pattern: /(@(annually|yearly|monthly|weekly|daily|hourly|reboot))|(@every (\d+(ns|us|µs|ms|s|m|h))+)|((((\d+,)+\d+|(\d+(\/|-)\d+)|\d+|\*) ?){5,7})/
+          example: 0 3 * * 1,2,3

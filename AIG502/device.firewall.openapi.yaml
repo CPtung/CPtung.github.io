@@ -1,0 +1,264 @@
+openapi: 3.0.0
+info:
+  version: 0.0.0
+  title: ThingsPro Firewall APIs
+servers:
+  - url: https://{ip}:{port}/api/v1
+    variables:
+      ip:
+        default: 127.0.0.1
+        description: HTTPs Server IP
+      port:
+        default: '8443'
+        description: HTTPs Server Port
+security:
+  - auth: []
+paths:
+  /device/firewall/inbounds:
+    get:
+      description: Get firewall host inbound status overview.
+      tags:
+        - host
+      responses:
+        '200':
+          description: firewall inbound configuration.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/inbound-host-zone'
+              example:
+                value:
+                  data:
+                    - id: 80
+                      name: Port_8443
+                      description: Admin Web HTTPS port
+                      gatewayPort: '8443'
+                      protocol: tcp
+                      sourceIp: 10.128.10.0/22
+                      sourcePort: ''
+                  count: 1
+  /device/firewall/inbounds/{id}:
+    parameters:
+      - description: rule ID
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+  /device/firewall/it-zone/inbounds:
+    get:
+      description: Get firewall it-zone inbound status overview.
+      tags:
+        - it-zone inbound
+      responses:
+        '200':
+          description: firewall inbound configuration.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/inbound-it-zone'
+              example:
+                value:
+                  data:
+                    - id: 80
+                      name: Port_8080
+                      description: Allow AIE Module test-1 Connection
+                      gatewayPort: '8080'
+                      protocol: tcp
+                      sourceIp: ''
+                      sourcePort: ''
+                      destinationIp: 172.31.4.100
+                      destinationPort: '8080'
+                  count: 1
+  /device/firewall/it-zone/inbounds/{id}:
+    parameters:
+      - description: rule ID
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+  /device/firewall/it-zone/outbounds:
+    get:
+      description: Get firewall it-zone outbound status overview.
+      tags:
+        - it-zone outbound
+      responses:
+        '200':
+          description: firewall outbound configuration.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/outbound-it-zone'
+              example:
+                value:
+                  data:
+                    - id: 80
+                      name: Port_8080
+                      description: Allow AIE Module test-1 Connection
+                      protocol: tcp
+                      sourceIp: ''
+                      sourcePort: ''
+                      destinationIp: 172.31.4.100
+                      destinationPort: '8080'
+                  count: 1
+  /device/firewall/it-zone/outbounds/{id}:
+    parameters:
+      - description: rule ID
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+components:
+  schemas:
+    inbound-host-zone:
+      title: Firewall host inbound configuration
+      required:
+        - name
+        - protocol
+        - gatewayPort
+      properties:
+        id:
+          type: integer
+          description: Inbound rule id
+        name:
+          type: string
+          description: rule name
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          description: rule description
+          minLength: 1
+          maxLength: 255
+        gatewayPort:
+          type: string
+          description: |
+            External port of IT Zone for portforwarding.
+        protocol:
+          type: string
+          description: |
+            Rule handles the specified protocol
+          enum:
+            - tcp
+            - udp
+        sourceIp:
+          type: string
+          description: |
+            Packet soruce IP. Support:
+              * 192.168.0.1
+              * 192.168.0.1/24
+              * empty string
+          default: ''
+        sourcePort:
+          type: string
+          description: |
+            Packet soruce port. Support:
+              * 502
+              * 502-505
+              * empty string
+          default: ''
+        destinationIp:
+          type: string
+          description: |
+            Packet destination IP of service or AIE module in IT Zone.
+              * 192.168.0.1
+          default: ''
+        destinationPort:
+          type: string
+          description: Packet destination Port of service or AIE module in IT Zone.
+    inbound-it-zone:
+      title: Firewall it-zone inbound configuration
+      required:
+        - name
+        - protocol
+        - gatewayPort
+      properties:
+        id:
+          type: integer
+          description: Inbound rule id
+        name:
+          type: string
+          description: rule name
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          description: rule description
+          minLength: 1
+          maxLength: 255
+        gatewayPort:
+          type: string
+          description: |
+            External port of IT Zone for portforwarding.
+        protocol:
+          type: string
+          description: |
+            Rule handles the specified protocol
+          enum:
+            - tcp
+            - udp
+        sourceIp:
+          type: string
+          description: |
+            Packet soruce IP. Support:
+              * 192.168.0.1
+              * 192.168.0.1/24
+              * empty string
+          default: ''
+        sourcePort:
+          type: string
+          description: |
+            Packet soruce port. Support:
+              * 502
+              * 502-505
+              * empty string
+          default: ''
+        destinationIp:
+          type: string
+          description: |
+            Packet destination IP of service or AIE module in IT Zone.
+              * 192.168.0.1
+          default: ''
+        destinationPort:
+          type: string
+          description: Packet destination Port of service or AIE module in IT Zone.
+    outbound-it-zone:
+      title: Firewall it-zone outbound configuration
+      required:
+        - name
+        - protocol
+        - destinationIp
+        - destinationPort
+      properties:
+        id:
+          type: integer
+          description: Outbound rule id
+        name:
+          type: string
+          description: rule name
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          description: rule description
+          minLength: 1
+          maxLength: 255
+        protocol:
+          type: string
+          description: |
+            Rule handles the specified protocol
+          enum:
+            - tcp
+            - udp
+        destinationIp:
+          type: string
+        destinationPort:
+          type: string

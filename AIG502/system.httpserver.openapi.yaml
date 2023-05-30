@@ -1,0 +1,148 @@
+openapi: 3.0.0
+info:
+  title: ThingsPro HTTP(s) Server APIs
+  version: 0.0.1
+servers:
+  - url: https://{ip}:{port}/api/v1
+    variables:
+      ip:
+        default: 127.0.0.1
+        description: HTTPs Server IP of Device
+      port:
+        default: '8443'
+        description: HTTPs Server Port of Device
+security:
+  - auth: []
+paths:
+  /system/httpserver:
+    get:
+      responses:
+        '200':
+          content:
+            application/json:
+              examples:
+                configResponse:
+                  $ref: '#/components/examples/configResponse'
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/httpserverConfig'
+          description: success
+      summary: Get httpserver configuration
+      tags:
+        - httpserver
+    patch:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            examples:
+              configRequest:
+                $ref: '#/components/examples/configRequest'
+            schema:
+              $ref: '#/components/schemas/httpserverConfig'
+      responses:
+        '200':
+          content:
+            application/json:
+              examples:
+                configResponse:
+                  $ref: '#/components/examples/configResponse'
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/httpserverConfig'
+          description: success
+      summary: Set httpserver configuration partially
+      tags:
+        - httpserver
+    put:
+      requestBody:
+        content:
+          multipart/form-data:
+            example:
+              httpEnable: false
+              httpPort: 80
+              httpsEnable: true
+              httpsPort: 8443
+              keyFile: '-----BEGIN RSA PRIVATE KEY-----MIIEogIBAAKCAQEA6lMhm8eRCZyqYocbhdEOM4w+MnZuWN7fUcJ4CiCyfyvHjvyfh+xnQfYs3SBMrFi7azwGRzSfntj7gGsFaIP27XD+cEh3Ph9XZdmn4XoNVmDV09mhR+8jH/v3tNrZtJY/5stvzGmyiRFfUt3S7DcRlsuOfy1of+C/W1WZ8Dg1Yz4L8XPThgL3Ooe02n+wGgsHmu6l4dLKPtuZDA+nmbGY+GuVQ7uIyhhmIQtiFIDe6qedvf7NOEsJAf/Ze0YikeUVgEvTy0PAKGfGDZyWWV/JJ50mng8GcvjoCs3+O8hCUYuGoxdnsfaUJwJt+f4yWPiz7qStMuWAdJiaMIvUR56SBQIDAQABAoIBAFYku51GT5amBql0G/Uk9sCSlSb+DPEU9ipbgL/QZ26DDLkPPCK/EPLZ6oJcZnORp0zz4yb4PJosEMGUFofmw7dkq9VhfpzS7tFdo+8rbI3Nya45OqZ0TohqnBTbw980wUc6kN4oGV90iIOxUuJOGGREbx1n9xvT5uVP4ejC8TWLHKNPx2ujf8rTWQrURTcHwZqVsqQZvNRNWtRhzd9juyxKvJw18W01Hbbfnf7O35J6ia7ySG2m1Sg6sKgjSmp2GtHN3RJywCRQm1nO9j4InZzTJQ+N6cP+Rn6W8SM3FhPB4JrYzYvgBg7lKN1AGFLmE3vOw/uY7G6TqfsHZegnA4ECgYEA/ygMvdXP8Ord9ZTO0RUbG7q+JZN68dgDXzdFtTqiLzhyt6F+VOWB2SFlA/a/x0gTXf69Rv1KOCWBHgMxb3dSTxud1NlfO3hb7H1H3ywC3+GPU5O+BhMzMqlQmYKg6XD0kwVRzbZUdBhEYYnwzSRXbl8VvDChdwrvZzZu9vkZW2ECgYEA6xlzYZpdYkgxHgoDysOPEDNfjGkdiIpEoDMzQ5G8xcxcxz8TevGpjMv+7rmDx3j9YDwVqIe/k857TS2jo3SAgbt42TXgXju7T+qv0Walf2r1e4rlUb7AzhNuKM3vTiL3tBmbkBgSWjY2uZCsSyF1E4QUhwFMwo5/nZtqEesWfSUCgYAwh7yMqssnJnTbDdecWuhSCN27peZfc1eI16lxg9pvIsxm8tdlbFWbJ8ffziHB1IqieR4lD237ad66B59ydP55v2XwovuDAyxwuY9e+i79yBgLrHEbFLHLM/r5h6f1Xp+WCw/5EXHUtvzilGrxibT7cChhJ9q+Gp1YQzktzkktYQKBgCSojEg81LDdhuMjNqIoSieBizWOsm82+CpusWCo2eGR0ymyWSxDgGeW64J35Od2ozOdStdDi4jVmn5XTnvPT7Zq8BYWg4zODZARjSa+tbGfkPWZm9ZaQyAfAX9VVSo+45buo0YdqsbsSy42M9dnOSU45CaE+l4f8CA4OpreqFwNAoGAN2jyg/sp120UJUPfLlg02eTNT9whrtM9hL6lE5JMVx+aPmrBFT9aojgJByaa+w7pOVSkpcnsNir63Tpzp8luwJPDoIj94KeOmkn+GlsHBfAdFLFTTSFtdCk08ZUrCMcizsSUuPc22WP3YouB5A+p+Gvp7saPTYlMMO6k8qeRQfs=-----END RSA PRIVATE KEY-----'
+              certFile: '-----BEGIN CERTIFICATE-----MIIDnTCCAoWgAwIBAgIRAKBIb0KyTZbvZmkpPERcf/MwDQYJKoZIhvcNAQELBQAwajEPMA0GA1UECAwGVGFpd2FuMRgwFgYDVQQHDA9OZXcgVGFpcGVpIENpdHkxEjAQBgNVBAoMCU1veGEgSW5jLjEpMCcGA1UEAwwgVGhpbmdzUHJvIEVkZ2UgUm9vdCBDQSBmb3IgSFRUUFMwHhcNMjMwMjE2MDMyOTI5WhcNMjUwNTIwMDMyOTI5WjBWMQ8wDQYDVQQIEwZUYWl3YW4xGDAWBgNVBAcTD05ldyBUYWlwZWkgQ2l0eTESMBAGA1UEChMJTW94YSBJbmMuMRUwEwYDVQQDEwxUQkJEQjExNzkyNDIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDqUyGbx5EJnKpihxuF0Q4zjD4ydm5Y3t9RwngKILJ/K8eO/J+H7GdB9izdIEysWLtrPAZHNJ+e2PuAawVog/btcP5wSHc+H1dl2afheg1WYNXT2aFH7yMf+/e02tm0lj/my2/MabKJEV9S3dLsNxGWy45/LWh/4L9bVZnwODVjPgvxc9OGAvc6h7Taf7AaCwea7qXh0so+25kMD6eZsZj4a5VDu4jKGGYhC2IUgN7qp529/s04SwkB/9l7RiKR5RWAS9PLQ8AoZ8YNnJZZX8knnSaeDwZy+OgKzf47yEJRi4ajF2ex9pQnAm35/jJY+LPupK0y5YB0mJowi9RHnpIFAgMBAAGjUjBQMA4GA1UdDwEB/wQEAwIFoDATBgNVHSUEDDAKBggrBgEFBQcDATAMBgNVHRMBAf8EAjAAMBsGA1UdEQQUMBKHBAp7DRCHBH8AAAGHBMCoBH8wDQYJKoZIhvcNAQELBQADggEBAJDxQyzy43+bfsP44hIdYH3VD/Edn2k6Od61O2yjSEgWOaKjprBW3KpNngPjeJGPfkxzonIT0xJ9Tr1DIwtjOOMlJkW9dBTuf7jT3hdJ5yYN8X5kF7ebwL+72AxnM5XLndc8I+r5JVKBod1JwON1c+wSXJGBDFTKo1AUFlaJWSATRNfLAZXZx8rhOpzJbR0JtLVGbffz9R1o2L875jfCYC/M8nU7SmzjUj8itRO+5OZEGLcqzBgTvcfiYoYKMnGKNrJYBbQggL9Nfqr/92EenBlOp6UkdPSp8dwMFoXtGFQ2symwJtldbo/9fIMj2oBkFa4EgEgSnkJK42bw0n4ApYg=-----END CERTIFICATE-----'
+            schema:
+              properties:
+                certFile:
+                  description: |
+                    (form-data only) certificate for https. The suffix of filename must be one of `.crt`, `.cer` or `.pem` with PEM format which the content starts with `----- BEGIN CERTIFICATE -----`
+                  format: binary
+                  type: string
+                httpEnable:
+                  type: boolean
+                ipv6Enable:
+                  type: boolean
+                httpPort:
+                  description: listen port for http
+                  type: integer
+                httpsEnable:
+                  type: boolean
+                httpsPort:
+                  description: listen port for https
+                  type: integer
+                keyFile:
+                  description: |
+                    (form-data only) key for https. The suffix of filename must be one of `.key`, `.pk` or `.pem` with PEM format which the content starts with `----- BEGIN RSA PRIVATE KEY -----`
+                  format: binary
+                  type: string
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              examples:
+                configResponse:
+                  $ref: '#/components/examples/configResponse'
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/httpserverConfig'
+          description: success
+      summary: Set httpserver configuration
+      tags:
+        - httpserver
+components:
+  securitySchemes:
+    auth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  examples:
+    configRequest:
+      summary: config request example
+      value:
+        httpEnable: false
+        httpsEnable: true
+        ipv6Enable: false
+        httpPort: 80
+        httpsPort: 8443
+    configResponse:
+      summary: config response example
+      value:
+        data:
+          httpEnable: false
+          httpsEnable: true
+          ipv6Enable: false
+          httpPort: 80
+          httpsPort: 8443
+  schemas:
+    httpserverConfig:
+      properties:
+        httpEnable:
+          type: boolean
+        httpsEnable:
+          type: boolean
+        ipv6Enable:
+          type: boolean
+        httpPort:
+          description: listen port for http
+          type: integer
+        httpsPort:
+          description: listen port for https
+          type: integer

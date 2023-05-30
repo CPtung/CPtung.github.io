@@ -1,0 +1,250 @@
+openapi: 3.0.0
+info:
+  title: ThingsPro Audit Service APIs
+  version: 0.0.0
+servers:
+  - url: https://{ip}:{port}/api/v1
+    variables:
+      ip:
+        default: 127.0.0.1
+        description: HTTPs Server IP
+      port:
+        default: '8443'
+        description: HTTPs Server Port
+security:
+  - auth: []
+paths:
+  /audits:
+    get:
+      parameters:
+        - in: query
+          name: limit
+          description: Limit the number of result (default:100).
+          schema:
+            type: integer
+        - in: query
+          name: offset
+          description: Log starting from the offset (default:0).
+          schema:
+            type: integer
+        - in: query
+          name: order
+          description: Order by key (default:time). Use id if order by absolute time required, cannot provide the precise time but the absolute order which won't affect by time change.
+          schema:
+            enum:
+              - time
+              - id
+              - category
+              - name
+            type: string
+        - in: query
+          name: sort
+          description: sorting (default:desc).
+          schema:
+            enum:
+              - asc
+              - desc
+            type: string
+        - in: query
+          name: categories
+          description: Filter out logs by category with keywords seperated by comma(,)
+          schema:
+            type: string
+        - in: query
+          name: names
+          description: Filter out logs by event name with keywords seperated by comma(,)
+          schema:
+            type: string
+        - in: query
+          name: severities
+          description: Filter out logs by severity with keywords seperated by comma(,)
+          schema:
+            type: string
+        - in: query
+          name: sources
+          description: Filter out logs by source with keywords seperated by comma(,)
+          schema:
+            type: string
+        - in: query
+          name: messages
+          description: Filter out logs that partially or fully match the category, with keywords separated by commas (,)
+          schema:
+            type: string
+        - in: query
+          name: download
+          description: Download audit log as csv file (Value is always true if having this field).
+          schema:
+            type: boolean
+        - in: query
+          name: monitor
+          description: Enable server-sent event to monitor exposed audit log. (Value is always true if having this field).
+          schema:
+            type: boolean
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                count: 2
+                data:
+                  - category: Maintenance
+                    createdAt: '2020-02-25T00:08:54.97510268+08:00'
+                    name: softwarePackageUpdate
+                    id: 20340
+                    message: Software package update success.
+                    source: System
+                    severity: notice
+                  - category: Maintenance
+                    createdAt: '2020-02-25T00:08:54.92855576+08:00'
+                    name: resetToConfigurationDefault
+                    id: 20339
+                    message: Reset to configuration default.
+                    source: System
+                    severity: notice
+                limit: 2
+                offset: 0
+                total: 14154
+              schema:
+                items:
+                  $ref: '#/components/schemas/AuditLog'
+                type: array
+            text/csv:
+              schema:
+                format: binary
+                type: string
+          description: success
+      summary: Get audits
+      tags:
+        - audit log
+  /audits/configuration:
+    get:
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                data:
+                  desiredDiskCacheSizeMB: 100
+                  enableTimeToLiveSec: true
+                  reachThresholdPolicy: rotate
+                  timeToLiveSec: 86400
+              schema:
+                items:
+                  $ref: '#/components/schemas/AuditSetting'
+                type: object
+          description: success
+      summary: Get Audit Log setting configuration
+      tags:
+        - audit log
+    put:
+      requestBody:
+        content:
+          application/json:
+            example:
+              desiredDiskCacheSizeMB: 2
+              enableTimeToLiveSec: true
+              reachThresholdPolicy: rotate
+              timeToLiveSec: 86400
+            schema:
+              items:
+                $ref: '#/components/schemas/AuditSetting'
+              type: object
+      responses:
+        '200':
+          content:
+            application/json:
+              example:
+                data:
+                  desiredDiskCacheSizeMB: 2
+                  enableTimeToLiveSec: true
+                  reachThresholdPolicy: rotate
+                  timeToLiveSec: 86400
+              schema:
+                items:
+                  $ref: '#/components/schemas/AuditSetting'
+                type: object
+          description: success
+      summary: Set audit configuration
+      tags:
+        - audit log
+components:
+  securitySchemes:
+    auth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    PostAuditLog:
+      properties:
+        data:
+          properties:
+            auditId:
+              description: Audit ID
+              type: string
+            message:
+              description: Audit message
+              type: string
+            source:
+              description: Audit source
+              type: string
+    AuditLog:
+      properties:
+        count:
+          description: Get Audit log count
+          type: integer
+        limit:
+          description: Get Audit log limit
+          type: integer
+        offset:
+          description: Get Audit log offset
+          type: integer
+        total:
+          description: Total Audit log count
+          type: integer
+        data:
+          properties:
+            category:
+              description: Audit category
+              type: string
+            createdAt:
+              description: Audit time in RFC3339 format (default:now).
+              type: string
+            name:
+              description: Audit name
+              type: string
+            message:
+              description: Audit message
+              type: string
+            detail:
+              description: Detail information of the audit log
+              type: string
+            source:
+              description: Audit source
+              type: string
+            severity:
+              description: Audit severity (default:notice).
+              enum:
+                - notice
+                - alert
+              type: string
+    AuditSetting:
+      properties:
+        data:
+          properties:
+            desiredDiskCacheSizeMB:
+              type: integer
+              minimum: 1
+              default: 100
+            enableTimeToLiveSec:
+              type: boolean
+              default: false
+            reachThresholdPolicy:
+              description: default to rotate
+              enum:
+                - rotate
+              type: string
+            timeToLiveSec:
+              description: unlimit if value <= 0
+              type: integer
+              minimum: 60
+              default: 86400
